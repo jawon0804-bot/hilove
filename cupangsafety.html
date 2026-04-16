@@ -25,7 +25,8 @@
                     <input type="text" id="comp" placeholder="소속 (예: 맥서브)" class="w-full border-2 p-4 rounded-2xl outline-sky-500 bg-slate-50">
                     <input type="text" id="name" placeholder="성함" class="w-full border-2 p-4 rounded-2xl outline-sky-500 bg-slate-50">
                     <input type="tel" id="tel" maxlength="13" placeholder="연락처 (숫자만)" class="w-full border-2 p-4 rounded-2xl outline-sky-500 bg-slate-50">
-                    <input type="text" id="addr" placeholder="주소" class="w-full border-2 p-4 rounded-2xl outline-sky-500 bg-slate-50">
+                    <input type="text" id="addr" placeholder="주소(시군구)" class="w-full border-2 p-4 rounded-2xl outline-sky-500 bg-slate-50">
+                    <input type="text" id="reason" placeholder="방문사유" class="w-full border-2 p-4 rounded-2xl outline-sky-500 bg-slate-50">
                     <button onclick="nextStep(2)" class="w-full bg-sky-600 text-white font-bold py-5 rounded-2xl shadow-lg mt-4 text-lg">확인 및 대시보드 활성화</button>
                 </div>
             </div>
@@ -145,6 +146,7 @@
                 workerData.name = document.getElementById('name').value;
                 workerData.phone = document.getElementById('tel').value;
                 workerData.address = document.getElementById('addr').value;
+                workerData.reason = document.getElementById('reason').value;
                 if (!workerData.name || !workerData.phone) { alert("성함과 연락처는 필수입니다."); return; }
             }
             document.querySelectorAll('.step-section').forEach(s => s.classList.remove('active'));
@@ -166,7 +168,8 @@
             finalForm.append('name', workerData.name);
             finalForm.append('phone', workerData.phone);
             finalForm.append('address', workerData.address);
-            finalForm.append('status', "점검완료");
+            finalForm.append('reason', workerData.reason);
+            finalForm.append('status', "교육완료");
             fetch(scriptURL, { method: 'POST', body: finalForm })
             .then(() => { alert("저장 완료! 오늘도 안전하게 작업하십시오."); location.reload(); })
             .catch(() => { alert("오류!"); btn.disabled = false; btn.innerText = "최종 확인 및 기록 저장"; });
