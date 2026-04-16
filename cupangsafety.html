@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>쿠팡 울산2 Sub-Hub 안전관리</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .step-section { display: none; }
+        .step-section.active { display: block; }
+        .card { background: white; border-radius: 1.5rem; box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1); border: 1px solid #e2e8f0; overflow: hidden; }
+        .content-scroll { max-height: 400px; overflow-y: auto; padding-right: 8px; }
+        .content-scroll::-webkit-scrollbar { width: 4px; }
+        .content-scroll::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800">
+
+    <div class="max-w-md mx-auto min-h-screen p-4 pb-20">
+        
+        <section id="step-1" class="step-section active">
+            <div class="card p-6 mt-10">
+                <h2 class="text-2xl font-bold text-sky-700 mb-6 border-b-2 border-sky-100 pb-2">👤 작업자 정보 등록</h2>
+                <div class="space-y-4">
+                    <input type="text" id="comp" placeholder="소속 (예: 맥서브)" class="w-full border-2 p-4 rounded-2xl outline-sky-500 bg-slate-50">
+                    <input type="text" id="name" placeholder="성함" class="w-full border-2 p-4 rounded-2xl outline-sky-500 bg-slate-50">
+                    <input type="tel" id="tel" maxlength="13" placeholder="연락처 (숫자만)" class="w-full border-2 p-4 rounded-2xl outline-sky-500 bg-slate-50">
+                    <input type="text" id="addr" placeholder="주소" class="w-full border-2 p-4 rounded-2xl outline-sky-500 bg-slate-50">
+                    <button onclick="nextStep(2)" class="w-full bg-sky-600 text-white font-bold py-5 rounded-2xl shadow-lg mt-4 text-lg">확인 및 대시보드 활성화</button>
+                </div>
+            </div>
+        </section>
+
+        <section id="step-2" class="step-section">
+            <div class="card p-6">
+                <h2 class="text-xl font-bold text-slate-800 mb-2">⚡ 사고 유형별 예방 수칙</h2>
+                <p class="text-xs text-slate-500 mb-4">핵심 안전 수칙을 확인하여 사고를 차단하십시오.</p>
+                <div class="content-scroll space-y-4">
+                    <div class="p-4 rounded-2xl bg-orange-50 border-l-4 border-orange-400">
+                        <h3 class="font-bold text-orange-700 mb-1">2.1 감전 사고 예방</h3>
+                        <p class="text-sm text-slate-600">① 전원 차단 원칙 (작업 중 표지판 부착)<br>② 절연 보호구 착용 (인증 제품 필수)<br>③ 검전기 사용 (잔류 전하 확인)</p>
+                    </div>
+                    <div class="p-4 rounded-2xl bg-blue-50 border-l-4 border-blue-400">
+                        <h3 class="font-bold text-blue-700 mb-1">2.2 추락 및 전도 예방</h3>
+                        <p class="text-sm text-slate-600">① 사다리 2인 1조 (아웃트리거 사용)<br>② 안전대 착용 (고정점 체결)<br>③ 현장 정리정돈 (발에 걸림 방지)</p>
+                    </div>
+                    <div class="p-4 rounded-2xl bg-purple-50 border-l-4 border-purple-400">
+                        <h3 class="font-bold text-purple-700 mb-1">2.3 밀폐공간 작업 안전</h3>
+                        <p class="text-sm text-slate-600">① 가스 농도 측정 (산소 및 유해가스)<br>② 강제 환기 실시 (송풍기 지속 가동)<br>③ 감시인 배치 (상시 소통 가능)</p>
+                    </div>
+                </div>
+                <button onclick="nextStep(3)" class="w-full bg-slate-800 text-white py-4 rounded-2xl font-bold mt-6">내용을 확인하였습니다 (1/4)</button>
+            </div>
+        </section>
+
+        <section id="step-3" class="step-section">
+            <div class="card p-6">
+                <h2 class="text-xl font-bold text-slate-800 mb-2">🚨 긴급상황 대응 (SOP)</h2>
+                <p class="text-xs text-slate-500 mb-4">위급 상황 발생 시 행동 요령입니다.</p>
+                <div class="content-scroll space-y-4">
+                    <div class="p-4 bg-white border border-slate-200 rounded-2xl">
+                        <h3 class="font-bold text-red-600 mb-1">🔥 화재 발생 시</h3>
+                        <p class="text-sm text-slate-600">전파 및 신고 → 가스계 소화기 사용(전기 화재 물 사용 금지) → 낮은 자세로 대피</p>
+                    </div>
+                    <div class="p-4 bg-white border border-slate-200 rounded-2xl">
+                        <h3 class="font-bold text-amber-600 mb-1">⚡ 감전 사고 발생 시</h3>
+                        <p class="text-sm text-slate-600">메인 전원 차단 → 119 및 관리자 보고 → 상태 확인 및 CPR 실시</p>
+                    </div>
+                    <div class="p-4 bg-white border border-slate-200 rounded-2xl">
+                        <h3 class="font-bold text-indigo-600 mb-1">💻 설비 장애 발생 시</h3>
+                        <p class="text-sm text-slate-600">영업 영향 분석 → 핵심 장비 순차 복구 → 원인 기록 및 대책 수립</p>
+                    </div>
+                </div>
+                <button onclick="nextStep(4)" class="w-full bg-slate-800 text-white py-4 rounded-2xl font-bold mt-6">내용을 확인하였습니다 (2/4)</button>
+            </div>
+        </section>
+
+        <section id="step-4" class="step-section">
+            <div class="card p-6">
+                <h2 class="text-xl font-bold text-slate-800 mb-4">📝 안전 점검 (TBM)</h2>
+                <div class="space-y-3">
+                    <label class="flex items-center gap-3 p-4 bg-slate-50 rounded-2xl border border-slate-100 cursor-pointer">
+                        <input type="checkbox" class="chk-item w-6 h-6 accent-sky-600">
+                        <span class="text-sm font-medium">적합한 보호구(안전모, 안전화 등) 구비</span>
+                    </label>
+                    <label class="flex items-center gap-3 p-4 bg-slate-50 rounded-2xl border border-slate-100 cursor-pointer">
+                        <input type="checkbox" class="chk-item w-6 h-6 accent-sky-600">
+                        <span class="text-sm font-medium">작업 반경 내 위험 요소(노출 전선 등) 제거</span>
+                    </label>
+                    <label class="flex items-center gap-3 p-4 bg-slate-50 rounded-2xl border border-slate-100 cursor-pointer">
+                        <input type="checkbox" class="chk-item w-6 h-6 accent-sky-600">
+                        <span class="text-sm font-medium">비상 시 대피 경로와 소화기 위치 숙지</span>
+                    </label>
+                    <label class="flex items-center gap-3 p-4 bg-slate-50 rounded-2xl border border-slate-100 cursor-pointer">
+                        <input type="checkbox" class="chk-item w-6 h-6 accent-sky-600">
+                        <span class="text-sm font-medium">2인 1조 작업 체계 구축 완료</span>
+                    </label>
+                </div>
+                <button onclick="checkAndNext(5)" class="w-full bg-slate-800 text-white py-4 rounded-2xl font-bold mt-6">점검 완료 (3/4)</button>
+            </div>
+        </section>
+
+        <section id="step-5" class="step-section">
+            <div class="card p-6">
+                <h2 class="text-xl font-bold text-slate-800 mb-4">📞 긴급 비상 연락망</h2>
+                <div class="grid grid-cols-1 gap-3">
+                    <a href="tel:119" class="p-4 rounded-2xl bg-red-50 border border-red-100 block transition active:bg-red-100">
+                        <p class="text-xs text-red-500 font-bold">공공기관</p>
+                        <p class="text-lg font-black text-red-600 leading-tight">119 / 112</p>
+                    </a>
+                    <a href="tel:052-000-0000" class="p-4 rounded-2xl bg-blue-50 border border-blue-100 block transition active:bg-blue-100">
+                        <p class="text-xs text-blue-500 font-bold">인근 병원 (응급실)</p>
+                        <p class="text-lg font-black text-blue-600 leading-tight">052-XXXX-XXXX</p>
+                    </a>
+                    <a href="tel:052-123-4567" class="p-4 rounded-2xl bg-slate-50 border border-slate-200 block transition active:bg-slate-100">
+                        <p class="text-xs text-slate-500 font-bold">쿠팡 울산2 통합관제센터</p>
+                        <p class="text-lg font-bold text-slate-700 leading-tight">052-XXXX-XXXX</p>
+                    </a>
+                    <a href="tel:010-9999-9999" class="p-4 rounded-2xl bg-slate-50 border border-slate-200 block transition active:bg-slate-100">
+                        <p class="text-xs text-slate-500 font-bold">소방안전관리자</p>
+                        <p class="text-lg font-bold text-slate-700 leading-tight">010-9999-9999</p>
+                    </a>
+                </div>
+                <button id="finalBtn" onclick="submitToSheet()" class="w-full bg-sky-600 text-white py-5 rounded-2xl font-black text-xl shadow-lg mt-6">최종 확인 및 기록 저장</button>
+            </div>
+        </section>
+
+    </div>
+
+    <script>
+        let workerData = { company: "", name: "", phone: "", address: "" };
+        const scriptURL = "https://script.google.com/macros/s/AKfycbxrL3i0FLT277uWUhqit15q1ScVY_srnjy0oYHR0FflKgHb9lgVqxytxnzAhYCZj8qh/exec";
+
+        // 연락처 자동 하이픈
+        document.getElementById('tel').addEventListener('input', function(e) {
+            let val = e.target.value.replace(/[^0-9]/g, '');
+            if (val.length > 3 && val.length <= 7) val = val.slice(0, 3) + '-' + val.slice(3);
+            else if (val.length > 7) val = val.slice(0, 3) + '-' + val.slice(3, 7) + '-' + val.slice(7);
+            e.target.value = val;
+        });
+
+        function nextStep(stepNum) {
+            if (stepNum === 2) {
+                workerData.company = document.getElementById('comp').value;
+                workerData.name = document.getElementById('name').value;
+                workerData.phone = document.getElementById('tel').value;
+                workerData.address = document.getElementById('addr').value;
+                if (!workerData.name || !workerData.phone) { alert("성함과 연락처는 필수입니다."); return; }
+            }
+            document.querySelectorAll('.step-section').forEach(s => s.classList.remove('active'));
+            document.getElementById('step-' + stepNum).classList.add('active');
+            window.scrollTo(0,0);
+        }
+
+        function checkAndNext(stepNum) {
+            const checks = document.querySelectorAll('.chk-item');
+            if (!Array.from(checks).every(c => c.checked)) { alert("모든 점검 항목을 체크해야 합니다."); return; }
+            nextStep(stepNum);
+        }
+
+        function submitToSheet() {
+            const btn = document.getElementById('finalBtn');
+            btn.disabled = true; btn.innerText = "저장 중...";
+            const finalForm = new FormData();
+            finalForm.append('company', workerData.company);
+            finalForm.append('name', workerData.name);
+            finalForm.append('phone', workerData.phone);
+            finalForm.append('address', workerData.address);
+            finalForm.append('status', "점검완료");
+            fetch(scriptURL, { method: 'POST', body: finalForm })
+            .then(() => { alert("저장 완료! 오늘도 안전하게 작업하십시오."); location.reload(); })
+            .catch(() => { alert("오류!"); btn.disabled = false; btn.innerText = "최종 확인 및 기록 저장"; });
+        }
+    </script>
+</body>
+</html>
