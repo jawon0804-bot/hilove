@@ -309,7 +309,7 @@
         });
 
         function saveAndStart() {
-            console.log("1. 버튼 눌림!"); // 시작 확인
+            console.log("1. 버튼 눌림!");
 
             workerData.company = document.getElementById('comp').value;
             workerData.name = document.getElementById('name').value;
@@ -317,25 +317,24 @@
             workerData.address = document.getElementById('addr').value;
             workerData.reason = document.getElementById('reason').value;
 
-            console.log("2. 데이터 담기 성공: ", workerData); // 데이터가 제대로 들어갔나?
-
             if (!workerData.name || !workerData.phone) { 
                 alert("성함과 연락처는 필수입니다."); 
                 return; 
             }
 
             const params = new URLSearchParams({...workerData, status: "교육미이수"});
-            console.log("3. 전송 시작: " + scriptURL + "?" + params.toString()); 
 
+            // [핵심] 전송 성공(then)하고 나서 화면을 이동하도록 구조 변경
             fetch(scriptURL + "?" + params.toString(), { method: 'GET', mode: 'no-cors' })
             .then(() => {
-                console.log("4. 데이터 전송 완료! 이제 화면 이동 시작."); 
+                console.log("4. 데이터 전송 완료! 이제 화면 이동 시작.");
+                nextStep('step-1-5'); // <--- 여기로 들어와야 합니다!
             })
             .catch((err) => {
                 console.log("전송 중 에러 발생: ", err);
+                alert("전송에 실패했습니다. 다시 시도해 주세요.");
             });
-        }
-             nextStep('step-1-5');
+        } // <--- 여기가 함수의 끝입니다. 괄호 밖에는 아무것도 없어야 해요!
 
         // 2. [최종 완료] 버튼용 함수 (수정된 버전)
         function saveAndComplete() {
@@ -402,6 +401,11 @@
                 </div>
             `;
             window.scrollTo(0, 0);
+        }
+        function nextStep(targetId) {
+            document.querySelectorAll('.step-section').forEach(s => s.classList.remove('active'));
+            document.getElementById(targetId).classList.add('active');
+            document.getElementById(targetId).scrollIntoView({ behavior: 'smooth' });
         }
     </script>
 </body>
