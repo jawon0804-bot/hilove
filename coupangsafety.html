@@ -298,127 +298,64 @@
     </div>
 
     <script>
-        let workerData = { company: "", name: "", phone: "", address: "", reason: "" };
-        const scriptURL = "https://script.google.com/macros/s/AKfycbxrL3i0FLT277uWUhqit15q1ScVY_srnjy0oYHR0FflKgHb9lgVqxytxnzAhYCZj8qh/exec";
+    let workerData = { company: "", name: "", phone: "", address: "", reason: "" };
+    const scriptURL = "https://script.google.com/macros/s/AKfycbxrL3i0FLT277uWUhqit15q1ScVY_srnjy0oYHR0FflKgHb9lgVqxytxnzAhYCZj8qh/exec";
 
-        document.getElementById('tel').addEventListener('input', function(e) {
-            let val = e.target.value.replace(/[^0-9]/g, '');
-            if (val.length > 3 && val.length <= 7) val = val.slice(0, 3) + '-' + val.slice(3);
-            else if (val.length > 7) val = val.slice(0, 3) + '-' + val.slice(3, 7) + '-' + val.slice(7);
-            e.target.value = val;
+    document.getElementById('tel').addEventListener('input', function(e) {
+        let val = e.target.value.replace(/[^0-9]/g, '');
+        if (val.length > 3 && val.length <= 7) val = val.slice(0, 3) + '-' + val.slice(3);
+        else if (val.length > 7) val = val.slice(0, 3) + '-' + val.slice(3, 7) + '-' + val.slice(7);
+        e.target.value = val;
+    });
+
+    function saveAndStart() {
+        workerData.company = document.getElementById('comp').value;
+        workerData.name = document.getElementById('name').value;
+        workerData.phone = document.getElementById('tel').value;
+        workerData.address = document.getElementById('addr').value;
+        workerData.reason = document.getElementById('reason').value;
+
+        if (!workerData.name || !workerData.phone) { 
+            alert("성함과 연락처는 필수입니다."); 
+            return; 
+        }
+
+        const params = new URLSearchParams({...workerData, status: "교육미이수"});
+
+        fetch(scriptURL + "?" + params.toString(), { method: 'GET', mode: 'no-cors' })
+        .then(() => {
+            nextStep('step-1-5');
+        })
+        .catch((err) => {
+            console.log("전송 중 에러 발생: ", err);
+            alert("전송에 실패했습니다. 다시 시도해 주세요.");
         });
-
-        function saveAndStart() {
-            console.log("1. 버튼 눌림!");
-
-            workerData.company = document.getElementById('comp').value;
-            workerData.name = document.getElementById('name').value;
-            workerData.phone = document.getElementById('tel').value;
-            workerData.address = document.getElementById('addr').value;
-            workerData.reason = document.getElementById('reason').value;
-
-            if (!workerData.name || !workerData.phone) { 
-                alert("성함과 연락처는 필수입니다."); 
-                return; 
-            }
-
-            const params = new URLSearchParams({...workerData, status: "교육미이수"});
-
-            // [핵심] 전송 성공(then)하고 나서 화면을 이동하도록 구조 변경
-            fetch(scriptURL + "?" + params.toString(), { method: 'GET', mode: 'no-cors' })
-            .then(() => {
-                console.log("4. 데이터 전송 완료! 이제 화면 이동 시작.");
-                nextStep('step-1-5'); // <--- 여기로 들어와야 합니다!
-            })
-            .catch((err) => {
-                console.log("전송 중 에러 발생: ", err);
-                alert("전송에 실패했습니다. 다시 시도해 주세요.");
-            });
-        } // <--- 여기가 함수의 끝입니다. 괄호 밖에는 아무것도 없어야 해요!
-
-        // 2. [최종 완료] 버튼용 함수 (수정된 버전)
-        function saveAndComplete() {
-            const btn = document.getElementById('finalBtn');
-            btn.disabled = true;
-            btn.innerText = "저장 중...";
-
-            // [핵심] 여기에 action: "update"를 꼭 넣어주세요!
-            const params = new URLSearchParams({
-                 ...workerData, 
-                 action: "update",   // <-- 이게 있어야 GAS가 수정을 시작합니다!
-                 status: "교육완료"
-             });
-
-             fetch(scriptURL + "?" + params.toString(), { method: 'GET', mode: 'no-cors' })
-             .then(() => { 
-                 showFinalMessage(); 
-             })
-             .catch((err) => {
-                 console.error("에러 발생:", err);
-                 btn.disabled = false;
-                 btn.innerText = "최종 확인 및 기록 저장";
-             });
-         }
-
-        function openEmergency() { nextStep('step-emergency'); }
-
-        function checkAndNext(stepNum) {
-            const checks = document.querySelectorAll('.chk-item');
-            if (!Array.from(checks).every(c => c.checked)) { alert("모든 점검 항목을 체크해야 합니다."); return; }
-            nextStep(stepNum);
-        }
-
-        document.addEventListener('change', (e) => {
-            if (e.target.classList.contains('chk-item')) {
-                const checks = document.querySelectorAll('.chk-item');
-                const progressBar = document.getElementById('progress-bar');
-                const progressText = document.getElementById('progress-text');
-                const readyMsg = document.getElementById('ready-msg');
-                const percent = Math.round((Array.from(checks).filter(c => c.checked).length / checks.length) * 100);
-                progressBar.style.width = percent + '%';
-                progressText.innerText = percent + '%';
-                if (percent === 100) readyMsg.classList.remove('hidden');
-                else readyMsg.classList.add('hidden');
-            }
-        });
-
-        function submitToSheet() {
-            const btn = document.getElementById('finalBtn');
-            btn.disabled = true; 
-            btn.innerText = "저장 중...";
-            const params = new URLSearchParams({...workerData, status: "교육완료"});
-            fetch(scriptURL + "?" + params.toString(), { method: 'GET', mode: 'no-cors' })
-            .then(() => { showFinalMessage(); })
-            .catch(() => { showFinalMessage(); });
-        }
-
-        function showFinalMessage() {
-            document.body.innerHTML = `
-                <div style="display: flex; justify-content: center; align-items: center; min-height: 100vh; background-color: #f8fafc;">
-                    <div style="font-size: 3rem; font-weight: 900; color: #0284c7; line-height: 1.4; text-align: center; word-break: break-all; letter-spacing: 0.5rem;">
-                        오<br>늘<br>하<br>루<br>도<br><br>안<br>전<br>하<br>게<br><br>작<br>업<br>하<br>자
-                    </div>
-                </div>
-            `;
-            window.scrollTo(0, 0);
-        }
-        function nextStep(targetId) {
-    const targetElement = document.getElementById(targetId);
-    
-    // 타겟이 없으면 에러를 뿜게 합니다.
-    if (!targetElement) {
-        console.error("🚨 범인 발견! 아래 ID를 가진 섹션을 HTML에서 찾을 수 없습니다: " + targetId);
-        console.log("현재 HTML에 존재하는 모든 섹션 ID 리스트:");
-        document.querySelectorAll('section').forEach(s => console.log(s.id));
-        return; // 여기서 멈춰야 화이트스크린이 안 뜹니다.
     }
 
-    // 정상일 때 실행
-    document.querySelectorAll('.step-section').forEach(s => s.classList.remove('active'));
-    targetElement.classList.add('active');
-    targetElement.scrollIntoView({ behavior: 'smooth' });
-}
+    function saveAndComplete() {
+        const btn = document.getElementById('finalBtn');
+        btn.disabled = true;
+        btn.innerText = "저장 중...";
+        const params = new URLSearchParams({ ...workerData, action: "update", status: "교육완료" });
+        fetch(scriptURL + "?" + params.toString(), { method: 'GET', mode: 'no-cors' })
+        .then(() => { showFinalMessage(); })
+        .catch((err) => {
+            console.error("에러 발생:", err);
+            btn.disabled = false;
+            btn.innerText = "최종 확인 및 기록 저장";
+        });
+    }
+
+    function nextStep(targetId) {
+        const targetElement = document.getElementById(targetId);
+        if (!targetElement) {
+            console.error("🚨 섹션을 찾을 수 없습니다: " + targetId);
+            return;
         }
-    </script>
+        document.querySelectorAll('.step-section').forEach(s => s.classList.remove('active'));
+        targetElement.classList.add('active');
+        targetElement.scrollIntoView({ behavior: 'smooth' });
+    }
+</script>
 </body>
 </html>
