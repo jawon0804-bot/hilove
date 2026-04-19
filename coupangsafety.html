@@ -324,25 +324,29 @@
             nextStep('step-1-5'); 
         }
 
-        // 2. [최종 완료] 버튼용 함수 (완료 기록)
+        // 2. [최종 완료] 버튼용 함수 (수정된 버전)
         function saveAndComplete() {
             const btn = document.getElementById('finalBtn');
             btn.disabled = true;
             btn.innerText = "저장 중...";
 
-            const params = new URLSearchParams({...workerData, status: "교육완료"});
-            fetch(scriptURL + "?" + params.toString(), { method: 'GET', mode: 'no-cors' })
-            .then(() => { showFinalMessage(); });
-        }
+            // [핵심] 여기에 action: "update"를 꼭 넣어주세요!
+            const params = new URLSearchParams({
+                 ...workerData, 
+                 action: "update",   // <-- 이게 있어야 GAS가 수정을 시작합니다!
+                 status: "교육완료"
+             });
 
-        function nextStep(target) {
-            document.querySelectorAll('.step-section').forEach(s => s.classList.remove('active'));
-            const targetElement = (typeof target === 'string') ? document.getElementById(target) : document.getElementById('step-' + target);
-            if(targetElement) {
-                targetElement.classList.add('active');
-                targetElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
-            }
-        }
+             fetch(scriptURL + "?" + params.toString(), { method: 'GET', mode: 'no-cors' })
+             .then(() => { 
+                 showFinalMessage(); 
+             })
+             .catch((err) => {
+                 console.error("에러 발생:", err);
+                 btn.disabled = false;
+                 btn.innerText = "최종 확인 및 기록 저장";
+             });
+         }
 
         function openEmergency() { nextStep('step-emergency'); }
 
