@@ -315,13 +315,25 @@
             workerData.address = document.getElementById('addr').value;
             workerData.reason = document.getElementById('reason').value;
 
-            if (!workerData.name || !workerData.phone) { alert("성함과 연락처는 필수입니다."); return; }
+            if (!workerData.name || !workerData.phone) { 
+                alert("성함과 연락처는 필수입니다."); 
+                return; 
+            }
 
             const params = new URLSearchParams({...workerData, status: "교육미이수"});
-            fetch(scriptURL + "?" + params.toString(), { method: 'GET', mode: 'no-cors' });
-    
-            // 기록 후 다음 섹션으로 이동
-            nextStep("step-1-5"); 
+
+            // [핵심] fetch 바로 뒤에 .then()을 붙입니다.
+            fetch(scriptURL + "?" + params.toString(), { method: 'GET', mode: 'no-cors' })
+            .then(() => {
+                // 전송이 성공한 뒤에만 이 함수가 실행됩니다!
+                console.log("전송 성공!");
+                nextStep('step-1-5'); 
+            })
+            .catch((error) => {
+                // 전송 중 에러가 나면 알려줍니다.
+                console.error("전송 에러:", error);
+                alert("전송 중 문제가 발생했습니다. 다시 시도해주세요.");
+            });
         }
 
         // 2. [최종 완료] 버튼용 함수 (수정된 버전)
