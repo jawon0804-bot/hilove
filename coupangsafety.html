@@ -329,13 +329,13 @@
 
             fetch(scriptURL + "?" + params.toString(), { method: 'GET', mode: 'no-cors' })
             .then(() => {
-                console.log("4. 데이터 전송 완료! 이제 화면 이동 시작.");
-                nextStep('step-1-5'); 
+                console.log("4. 데이터 전송 완료! 이제 화면 이동 시작."); 
             })
             .catch((err) => {
                 console.log("전송 중 에러 발생: ", err);
             });
         }
+             nextStep('step-1-5');
 
         // 2. [최종 완료] 버튼용 함수 (수정된 버전)
         function saveAndComplete() {
