@@ -345,6 +345,14 @@
             btn.innerText = "최종 확인 및 기록 저장";
         });
     }
+
+    function openEmergency() { nextStep('step-emergency'); }    
+        
+    function checkAndNext(stepNum) {
+            const checks = document.querySelectorAll('.chk-item');
+            if (!Array.from(checks).every(c => c.checked)) { alert("모든 점검 항목을 체크해야 합니다."); return; }
+            nextStep(stepNum);
+        }    
          document.addEventListener('change', (e) => {
             if (e.target.classList.contains('chk-item')) {
                 const checks = document.querySelectorAll('.chk-item');
