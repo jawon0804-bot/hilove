@@ -403,9 +403,21 @@
             window.scrollTo(0, 0);
         }
         function nextStep(targetId) {
-            document.querySelectorAll('.step-section').forEach(s => s.classList.remove('active'));
-            document.getElementById(targetId).classList.add('active');
-            document.getElementById(targetId).scrollIntoView({ behavior: 'smooth' });
+    const targetElement = document.getElementById(targetId);
+    
+    // 타겟이 없으면 에러를 뿜게 합니다.
+    if (!targetElement) {
+        console.error("🚨 범인 발견! 아래 ID를 가진 섹션을 HTML에서 찾을 수 없습니다: " + targetId);
+        console.log("현재 HTML에 존재하는 모든 섹션 ID 리스트:");
+        document.querySelectorAll('section').forEach(s => console.log(s.id));
+        return; // 여기서 멈춰야 화이트스크린이 안 뜹니다.
+    }
+
+    // 정상일 때 실행
+    document.querySelectorAll('.step-section').forEach(s => s.classList.remove('active'));
+    targetElement.classList.add('active');
+    targetElement.scrollIntoView({ behavior: 'smooth' });
+}
         }
     </script>
 </body>
