@@ -306,27 +306,29 @@
         nextStep('step-emergency'); 
     }
 
-    // 3. 섹션 이동 (번호 없어도 자동 이동)
-    function nextStep(targetId) {
-        if (!targetId) {
-            const current = document.querySelector('.step-section.active');
-            const next = current ? current.nextElementSibling : null;
-            if (next && next.classList.contains('step-section')) {
-                targetId = next.id;
-            } else {
-                return;
-            }
-        }
+    // 3. 작업 시작 (정보 저장 및 이동)
+    function saveAndStart(targetId) {
+        workerData.company = document.getElementById('comp').value;
+        workerData.name = document.getElementById('name').value;
+        workerData.phone = document.getElementById('tel').value;
+        workerData.address = document.getElementById('addr').value;
+        workerData.reason = document.getElementById('reason').value;
         
+        if(!workerData.name) { alert("성함을 입력해주세요."); return; }
+        nextStep(targetId);
+    }
+
+    // 4. 섹션 이동
+    function nextStep(targetId) {
         const targetElement = document.getElementById(targetId);
         if (targetElement) {
             document.querySelectorAll('.step-section').forEach(s => s.classList.remove('active'));
             targetElement.classList.add('active');
-            targetElement.scrollIntoView({ behavior: 'smooth' });
+            window.scrollTo(0, 0);
         }
     }
 
-    // 4. 전화번호 자동 하이픈
+    // 5. 전화번호 자동 하이픈
     const telInput = document.getElementById('tel');
     if (telInput) {
         telInput.addEventListener('input', function(e) {
@@ -337,7 +339,7 @@
         });
     }
 
-    // 5. 체크리스트 진행률
+    // 6. 체크리스트 진행률
     document.addEventListener('change', (e) => {
         if (e.target.classList.contains('chk-item')) {
             const checks = document.querySelectorAll('.chk-item');
@@ -346,7 +348,6 @@
             const readyMsg = document.getElementById('ready-msg');
             
             if (checks.length === 0) return;
-            
             const percent = Math.round((Array.from(checks).filter(c => c.checked).length / checks.length) * 100);
             
             if (progressBar) progressBar.style.width = percent + '%';
@@ -357,7 +358,7 @@
         }
     });
 
-    // 6. 체크 완료 후 이동
+    // 7. 체크 완료 후 이동
     function checkAndNext(stepNum) {
         const checks = document.querySelectorAll('.chk-item');
         if (!Array.from(checks).every(c => c.checked)) { 
@@ -367,13 +368,10 @@
         nextStep(stepNum);
     }
 
-    // 7. 최종 전송
+    // 8. 최종 전송
     function saveAndComplete() {
         const btn = document.getElementById('finalBtn');
-        if (btn) {
-            btn.disabled = true;
-            btn.innerText = "저장 중...";
-        }
+        if (btn) { btn.disabled = true; btn.innerText = "저장 중..."; }
         
         const params = new URLSearchParams({ ...workerData, action: "update", status: "교육완료" });
         
@@ -381,15 +379,12 @@
         .then(() => { showFinalMessage(); })
         .catch((err) => {
             console.error("전송 에러:", err);
-            if (btn) {
-                btn.disabled = false;
-                btn.innerText = "최종 확인 및 기록 저장";
-            }
+            if (btn) { btn.disabled = false; btn.innerText = "교육 완료 및 제출"; }
             alert("전송 실패. 다시 시도해주세요.");
         });
     }
 
-    // 8. 최종 메시지
+    // 9. 최종 메시지
     function showFinalMessage() {
         document.body.innerHTML = `
             <div style="display: flex; justify-content: center; align-items: center; min-height: 100vh; background-color: #f8fafc; font-family: sans-serif;">
