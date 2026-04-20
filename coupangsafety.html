@@ -29,6 +29,7 @@
 
     <div class="max-w-md mx-auto min-h-screen flex flex-col p-4 justify-start">
         
+        <!-- STEP 1: 작업자 정보 등록 -->
         <section id="step-1" class="step-section active">
             <div class="card p-6 mt-4">
                 <div class="flex items-center justify-between mb-1 border-b-2 border-sky-100 pb-2">
@@ -38,39 +39,42 @@
                         <button type="button" onclick="openEmergency()" class="text-xl">🚨</button>
                     </div>
                 </div>
-                        <div class="flex justify-end pr-2 mb-4">
-                             <span class="text-[12px] text-slate-500 font-bold">비상 연락망 바로가기⬆️</span>
-                        </div>
+                <div class="flex justify-end pr-2 mb-4">
+                     <span class="text-[12px] text-slate-500 font-bold">비상 연락망 바로가기⬆️</span>
+                </div>
                 <div class="space-y-4">
                     <input type="text" id="comp" placeholder="소속 (예: 맥서브)" class="w-full border-2 p-4 rounded-2xl outline-sky-500 bg-slate-50 border-slate-200">
                     <input type="text" id="name" placeholder="성함" class="w-full border-2 p-4 rounded-2xl outline-sky-500 bg-slate-50 border-slate-200">
                     <input type="tel" id="tel" maxlength="13" placeholder="연락처 (숫자만)" class="w-full border-2 p-4 rounded-2xl outline-sky-500 bg-slate-50 border-slate-200">
                     <input type="text" id="addr" placeholder="주소 (시군구)" class="w-full border-2 p-4 rounded-2xl outline-sky-500 bg-slate-50 border-slate-200">
                     <input type="text" id="reason" placeholder="방문사유" class="w-full border-2 p-4 rounded-2xl outline-sky-500 bg-slate-50 border-slate-200">
-                    <button onclick="saveAndStart('step-1-5')" class="w-full bg-sky-600 text-white font-bold py-5 rounded-2xl shadow-lg mt-4 text-lg active:scale-[0.98]">
-                    대시보드 활성화 및 입장
-                </button>
+                    <button onclick="saveAndNext('step-1-5')" class="w-full bg-sky-600 text-white font-bold py-5 rounded-2xl shadow-lg mt-4 text-lg active:scale-[0.98]">
+                        확인 및 대시보드 활성화
+                    </button>
                 </div>
             </div>
         </section>
 
+        <!-- STEP 1-5: 작업 표준 절차 -->
         <section id="step-1-5" class="step-section">
             <div class="card p-6">
-                <h2 class="text-center text-xl font-bold text-slate-800 mb-4"><span style="font-weight: bold; font-family: sans-serif;">
-    <span class="text-[6vw] sm:text-[30px] font-bold font-sans">
-    <span style="color: #8B4513;">cou</span><span style="color: #E65100;">p</span><span style="color: #D4AC0D;">a</span><span style="color: #76C043;">n</span><span style="color: #00BFFF;">g</span><span style="color: #334155; margin-left: 5px;">ulsan2 sub-hub</span>
-</span><br><br>작업 표준 절차 및 준수 사항</h2>
+                <h2 class="text-center text-xl font-bold text-slate-800 mb-4">
+                    <span class="text-[6vw] sm:text-[30px] font-bold font-sans">
+                        <span style="color: #8B4513;">cou</span><span style="color: #E65100;">p</span><span style="color: #D4AC0D;">a</span><span style="color: #76C043;">n</span><span style="color: #00BFFF;">g</span><span style="color: #334155; margin-left: 5px;">ulsan2 sub-hub</span>
+                    </span><br><br>작업 표준 절차 및 준수 사항
+                </h2>
                 <div class="space-y-4">
                     <p class="pl-6 indent-[-15px] p-4 bg-slate-50 rounded-2xl border border-slate-100 text-sm font-medium">1. 지정 장소 외 절대 금연(흡연은 지정된 외부 흡연실에서만 가능).</p>
                     <p class="pl-6 indent-[-15px] p-4 bg-slate-50 rounded-2xl border border-slate-100 text-sm font-medium">2. 음주 상태 또는 약물 복용 시 현장 출입 및 작업 절대 불가.</p>
                     <p class="pl-6 indent-[-15px] p-4 bg-slate-50 rounded-2xl border border-slate-100 text-sm font-medium">3. 현장 관리자의 사전 승인 없는 인화성 물질(라이터, 화학물질 등) 반입 금지.</p>
                     <p class="pl-6 indent-[-15px] p-4 bg-slate-50 rounded-2xl border border-slate-100 text-sm font-medium">4. 작업 완료 후 발생한 폐기물 즉시 수거 및 현장 원상 복구.</p>
                     <p class="pl-6 indent-[-15px] p-4 bg-slate-50 rounded-2xl border border-slate-100 text-sm font-medium">5. xxxxxxxxxx</p>
-                    <button onclick="nextStep('step-2')" class="w-full bg-slate-800 text-white py-4 rounded-2xl font-bold mt-6 active:scale-[0.98]">내용 확인 완료</button>
+                    <button onclick="nextStep(2)" class="w-full bg-slate-800 text-white py-4 rounded-2xl font-bold mt-6 active:scale-[0.98]">내용 확인 완료</button>
                 </div>
             </div>
         </section>
 
+        <!-- STEP 2: 감전 사고 예방 -->
         <section id="step-2" class="step-section">
             <div class="card p-6 ">
                <div class="bg-white rounded-2xl border-t-4 border-amber-500 overflow-hidden flex flex-col">
@@ -96,10 +100,11 @@
                         </ul>
                     </div>
                 </div>
-                <button onclick="nextStep('step-3')" class="w-full bg-slate-800 text-white py-4 rounded-2xl font-bold mt-6 active:scale-[0.98]">내용을 확인하였습니다 (1/8)</button>
+                <button onclick="nextStep(3)" class="w-full bg-slate-800 text-white py-4 rounded-2xl font-bold mt-6 active:scale-[0.98]">내용을 확인하였습니다 (1/8)</button>
             </div>
         </section>
 
+        <!-- STEP 3: 추락 사고 예방 -->
         <section id="step-3" class="step-section">
             <div class="card p-6">
                  <div class="bg-white rounded-2xl border-t-4 border-sky-500 overflow-hidden flex flex-col">
@@ -120,15 +125,16 @@
                             </li>
                             <li class="flex items-start gap-3">
                                 <span class="bg-sky-100 text-sky-700 w-6 h-6 rounded-full flex items-center justify-center font-bold text-sm shrink-0">3</span>
-                                <div><strong class="block text-slate-700">현장 정리정돈</strong><span class="text-sm text-slate-600 leading-relaxed">케이블 자재, 공구 등이 바닥에 방치되어 발에 걸리지 않도록 수시로 정리합니다.</span></div>
+                                <div><strong class="block text-slate-700">현장 정리정돈</strong><span class="text-sm text-slate-600 leading-relaxed">케이블 타이, 공구 등이 바닥에 방치되어 발에 걸리지 않도록 수시로 정리합니다.</span></div>
                             </li>
                         </ul>
                     </div>
                 </div>
-                <button onclick="nextStep('step-4')" class="w-full bg-slate-800 text-white py-4 rounded-2xl font-bold mt-6 active:scale-[0.98]">내용을 확인하였습니다 (2/8)</button>
+                <button onclick="nextStep(4)" class="w-full bg-slate-800 text-white py-4 rounded-2xl font-bold mt-6 active:scale-[0.98]">내용을 확인하였습니다 (2/8)</button>
             </div>
         </section>
 
+        <!-- STEP 4: 밀폐공간 -->
         <section id="step-4" class="step-section">
             <div class="card p-6">
                 <div class="bg-white rounded-2xl border-t-4 border-emerald-500 overflow-hidden flex flex-col">
@@ -154,10 +160,11 @@
                         </ul>
                     </div>
                 </div>
-                <button onclick="nextStep('step-5')" class="w-full bg-slate-800 text-white py-4 rounded-2xl font-bold mt-6 active:scale-[0.98]">내용을 확인하였습니다 (3/8)</button>
+                <button onclick="nextStep(5)" class="w-full bg-slate-800 text-white py-4 rounded-2xl font-bold mt-6 active:scale-[0.98]">내용을 확인하였습니다 (3/8)</button>
             </div>
         </section>
 
+        <!-- STEP 5: 감전 SOP -->
         <section id="step-5" class="step-section">
             <div class="card p-6">
                 <h2 class="text-xl font-bold text-slate-800 mb-4">🚨 긴급상황 대응 (SOP)</h2>
@@ -170,10 +177,11 @@
                         <div class="flex gap-3"><div class="w-8 h-8 rounded-full bg-amber-100 text-amber-700 flex items-center justify-center font-bold text-sm shrink-0">3</div><p class="text-sm text-slate-700"><strong>응급조치</strong><br> 의식 및 호흡 여부를 확인하고, 호흡이 없을 경우 <b class="text-red-500">119</b> 도착 전까지 <b class="text-red-500">심폐소생술(CPR)</b>을 실시합니다.</p></div>
                     </div>
                 </div>
-                <button onclick="nextStep('step-6')" class="w-full bg-slate-800 text-white py-4 rounded-2xl font-bold mt-6 active:scale-[0.98]">내용을 확인하였습니다 (4/8)</button>
+                <button onclick="nextStep(6)" class="w-full bg-slate-800 text-white py-4 rounded-2xl font-bold mt-6 active:scale-[0.98]">내용을 확인하였습니다 (4/8)</button>
             </div>
         </section>
 
+        <!-- STEP 6: 화재 SOP -->
         <section id="step-6" class="step-section">
             <div class="card p-6">
                 <h2 class="text-xl font-bold text-slate-800 mb-4">🚨 긴급상황 대응 (SOP)</h2>
@@ -181,15 +189,16 @@
                 <div class="bg-slate-50 p-4 rounded-2xl border border-slate-100">
                     <h3 class="text-xl font-bold text-red-600 mb-4 flex items-center gap-2"><span>🔥</span> 화재 발생 시</h3>
                     <div class="space-y-12 text-sm">
-                        <div class="flex gap-3"><div class="w-8 h-8 rounded-full bg-amber-100 text-amber-700 flex items-center justify-center font-bold text-sm shrink-0">1</div><p class="text-sm text-slate-700"><strong>전파 및 신고</strong><br> "불이야!"라고 크게 외쳐 주변에 알리고 소화전 발신기를 누른 후 <b class="text-red-500">119</b>에 신고합니다. </p></div>
+                        <div class="flex gap-3"><div class="w-8 h-8 rounded-full bg-amber-100 text-amber-700 flex items-center justify-center font-bold text-sm shrink-0">1</div><p class="text-sm text-slate-700"><strong>전파 및 신고</strong><br> "불이야!"라고 그케 외쳐 주변에 알리고 소화전 발신기를 누른 후 <b class="text-red-500">119</b>에 신고합니다. </p></div>
                         <div class="flex gap-3"><div class="w-8 h-8 rounded-full bg-amber-100 text-amber-700 flex items-center justify-center font-bold text-sm shrink-0">2</div><p class="text-sm text-slate-700"><strong>초기 소화</strong><br> 가스계 소화기(CO2, 할론 등)를 사용하여 초기 진압을 시도합니다. <b class="text-red-500">(전기 화재 물 사용 금지)</b></p></div>
                         <div class="flex gap-3"><div class="w-8 h-8 rounded-full bg-amber-100 text-amber-700 flex items-center justify-center font-bold text-sm shrink-0">3</div><p class="text-sm text-slate-700"><strong>대피</strong><br> 진압이 어려울 경우 젖은 수건으로 코와 입을 막고 낮은 자세로 <b class="text-red-500">비상구</b>를 통해 탈출합니다.</p></div>
                     </div>
                 </div>
-                <button onclick="nextStep('step-7')" class="w-full bg-slate-800 text-white py-4 rounded-2xl font-bold mt-6 active:scale-[0.98]">내용을 확인하였습니다 (5/8)</button>
+                <button onclick="nextStep(7)" class="w-full bg-slate-800 text-white py-4 rounded-2xl font-bold mt-6 active:scale-[0.98]">내용을 확인하였습니다 (5/8)</button>
             </div>
         </section>
 
+        <!-- STEP 7: 장애 SOP -->
         <section id="step-7" class="step-section">
             <div class="card p-6">
                 <h2 class="text-xl font-bold text-slate-800 mb-4">🚨 긴급상황 대응 (SOP)</h2>
@@ -202,10 +211,11 @@
                         <div class="flex gap-3"><div class="w-8 h-8 rounded-full bg-amber-100 text-amber-700 flex items-center justify-center font-bold text-sm shrink-0">3</div><p class="text-sm text-slate-700"><strong>원인 기록</strong><br> 복구 후 로그 분석을 통해 <b class="text-red-500">재발 방지 대책</b>을 수립합니다.</p></div>
                     </div>
                 </div>
-                <button onclick="nextStep('step-8')" class="w-full bg-slate-800 text-white py-4 rounded-2xl font-bold mt-6 active:scale-[0.98]">내용을 확인하였습니다 (6/8)</button>
+                <button onclick="nextStep(8)" class="w-full bg-slate-800 text-white py-4 rounded-2xl font-bold mt-6 active:scale-[0.98]">내용을 확인하였습니다 (6/8)</button>
             </div>
         </section>
 
+        <!-- STEP 8: TBM 체크리스트 -->
         <section id="step-8" class="step-section">
             <div class="card p-6">
                 <h2 class="text-xl font-bold text-slate-800 mb-4">📝 작업 전 안전점검 체크리스트 (TBM)</h2>
@@ -238,10 +248,11 @@
                     </div>
                     <div id="ready-msg" class="hidden text-center mt-2 font-bold text-green-600 animate-bounce">✅ 작업 준비 완료!</div>
                 </div>
-                <button onclick="checkAndNext('step-9')" class="w-full bg-slate-800 text-white py-4 rounded-2xl font-bold mt-6 active:scale-[0.98]"> 점검 완료 (7/8)</button>
+                <button onclick="checkAndNext(9)" class="w-full bg-slate-800 text-white py-4 rounded-2xl font-bold mt-6 active:scale-[0.98]">점검 완료 (7/8)</button>
             </div>
         </section>
 
+        <!-- STEP 9: 최종 비상연락망 및 저장 -->
         <section id="step-9" class="step-section">
             <div class="card p-12">
                 <h2 class="text-xl font-bold text-slate-800 mb-4">📞 긴급 비상 연락망</h2>
@@ -263,12 +274,11 @@
                         <p class="text-lg font-bold text-slate-700 leading-tight">010-9999-9999</p>
                     </a>
                 </div>
-                <button id="finalBtn" onclick="saveAndComplete()" class="w-full bg-sky-600 text-white py-5 rounded-2xl font-black text-xl shadow-lg mt-6 active:scale-[0.98]">
-                    교육 완료 및 제출
-                </button>
+                <button id="finalBtn" onclick="submitToSheet()" class="w-full bg-sky-600 text-white py-5 rounded-2xl font-black text-xl shadow-lg mt-6 active:scale-[0.98]">최종 확인 및 기록 저장</button>
             </div>
         </section>
 
+        <!-- EMERGENCY 전용 섹션 -->
         <section id="step-emergency" class="step-section">
             <div class="card p-12">
                 <h2 class="text-xl font-bold text-slate-800 mb-4">📞 긴급 비상 연락망 (🚨)</h2>
@@ -277,7 +287,7 @@
                         <p class="text-xs text-red-500 font-bold">공공기관</p>
                         <p class="text-lg font-black text-red-600 leading-tight">119 / 112</p>
                     </a>
-                        <a href="tel:052-000-0000" class="p-4 rounded-2xl bg-blue-50 border border-blue-100 block transition active:bg-blue-100">
+                    <a href="tel:052-000-0000" class="p-4 rounded-2xl bg-blue-50 border border-blue-100 block transition active:bg-blue-100">
                         <p class="text-xs text-blue-500 font-bold">인근 병원 (응급실)</p>
                         <p class="text-lg font-black text-blue-600 leading-tight">052-XXXX-XXXX</p>
                     </a>
@@ -292,133 +302,135 @@
                 </div>
                 <button onclick="location.reload()" class="w-full bg-red-600 text-white py-4 rounded-2xl font-bold mt-6">처음 화면으로 돌아가기</button>
             </div>
-        </div>
-    </section>
+        </section>
 
     </div>
-    <script>
-    // 1. 데이터 저장소
-    let workerData = { company: "", name: "", phone: "", address: "", reason: "" };
-    // [중요] 과장님의 구글 앱스 스크립트 배포 URL을 여기에 넣으세요
-    const scriptURL = "https://script.google.com/macros/s/AKfycbxrL3i0FLT277uWUhqit15q1ScVY_srnjy0oYHR0FflKgHb9lgVqxytxnzAhYCZj8qh/exec";
 
-    // [추가] 전화번호 자동 하이픈 기능
-    const telInput = document.getElementById('tel');
-    if (telInput) {
-        telInput.addEventListener('input', function(e) {
+    <script>
+        // 원본 항목 데이터 저장용
+        let workerData = { 
+            date: "",
+            company: "", 
+            name: "", 
+            phone: "", 
+            address: "", 
+            reason: "" 
+        };
+
+        const scriptURL = "https://script.google.com/macros/s/AKfycbxrL3i0FLT277uWUhqit15q1ScVY_srnjy0oYHR0FflKgHb9lgVqxytxnzAhYCZj8qh/exec";
+
+        // 연락처 하이픈 자동 처리
+        document.getElementById('tel').addEventListener('input', function(e) {
             let val = e.target.value.replace(/[^0-9]/g, '');
             if (val.length > 3 && val.length <= 7) val = val.slice(0, 3) + '-' + val.slice(3);
             else if (val.length > 7) val = val.slice(0, 3) + '-' + val.slice(3, 7) + '-' + val.slice(7);
             e.target.value = val;
         });
-    }
 
-    // 2. 정보 저장 및 시작
-    function saveAndStart(targetId) {
-        workerData.company = document.getElementById('comp').value;
-        workerData.name = document.getElementById('name').value;
-        workerData.phone = document.getElementById('tel').value;
-        workerData.address = document.getElementById('addr').value;
-        workerData.reason = document.getElementById('reason').value;
-        
-        if(!workerData.name || !workerData.phone) { 
-            alert("성함과 연락처를 모두 입력해주세요."); 
-            return; 
+        // 오늘 날짜 가져오기 (YYYY-MM-DD)
+        function getToday() {
+            const d = new Date();
+            return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
         }
-        nextStep(targetId);
-    }
 
-    // 3. 페이지 이동
-    function nextStep(targetId) {
-        document.querySelectorAll('.step-section').forEach(s => s.classList.remove('active'));
-        document.getElementById(targetId).classList.add('active');
-        window.scrollTo(0, 0);
-    }
+        // 스크립트 전송 공통 로직
+        function sendToGas(statusValue) {
+            const params = new URLSearchParams({
+                date: workerData.date,
+                company: workerData.company,
+                name: workerData.name,
+                phone: workerData.phone,
+                address: workerData.address,
+                reason: workerData.reason,
+                status: statusValue
+            });
 
-    // 4. 최종 전송 (스프레드시트 데이터 기록)
-    function saveAndComplete() {
-        const btn = document.getElementById('finalBtn');
-        btn.disabled = true;
-        btn.innerText = "전송 중...";
+            // GET 요청 (구글 앱스 스크립트 특성상 no-cors 사용)
+            fetch(`${scriptURL}?${params.toString()}`, { 
+                method: 'GET', 
+                mode: 'no-cors' 
+            });
+        }
 
-        // 과장님이 작성하신 doGet의 action 파라미터에 맞게 전송
-        const params = new URLSearchParams({
-            ...workerData,
-            action: "append" // 데이터 새로 추가
-        });
+        // 1단계: 정보 저장 및 시작 알림
+        function saveAndNext(nextStepId) {
+            workerData.date = getToday();
+            workerData.company = document.getElementById('comp').value;
+            workerData.name = document.getElementById('name').value;
+            workerData.phone = document.getElementById('tel').value;
+            workerData.address = document.getElementById('addr').value;
+            workerData.reason = document.getElementById('reason').value;
 
-        fetch(scriptURL + "?" + params.toString(), {
-            method: 'GET',
-            mode: 'no-cors'
-        })
-        .then(() => {
-            alert("제출이 완료되었습니다.");
-            window.location.reload(); // 성공 시 리로드
-        })
-        .catch(err => {
-            console.error(err);
-            alert("전송 실패: " + err);
-            btn.disabled = false;
-            btn.innerText = "교육 완료 및 제출";
-        });
-    }
+            if (!workerData.name || !workerData.phone) { 
+                alert("성함과 연락처는 필수입니다."); 
+                return; 
+            }
 
-    // 6. 체크리스트 진행률
-    document.addEventListener('change', (e) => {
-        if (e.target.classList.contains('chk-item')) {
-            const checks = document.querySelectorAll('.chk-item');
-            const progressBar = document.getElementById('progress-bar');
-            const progressText = document.getElementById('progress-text');
-            const readyMsg = document.getElementById('ready-msg');
-            
-            if (checks.length === 0) return;
-            const percent = Math.round((Array.from(checks).filter(c => c.checked).length / checks.length) * 100);
-            
-            if (progressBar) progressBar.style.width = percent + '%';
-            if (progressText) progressText.innerText = percent + '%';
-            if (readyMsg) {
-                percent === 100 ? readyMsg.classList.remove('hidden') : readyMsg.classList.add('hidden');
+            // 시트에 행 생성 (또는 중복 날짜 체크를 위해 '교육미이수' 상태로 전송)
+            sendToGas("교육미이수");
+
+            nextStep(nextStepId);
+        }
+
+        function nextStep(target) {
+            document.querySelectorAll('.step-section').forEach(s => s.classList.remove('active'));
+            const targetElement = (typeof target === 'string') ? document.getElementById(target) : document.getElementById('step-' + target);
+            if(targetElement) {
+                targetElement.classList.add('active');
+                window.scrollTo({ top: 0, behavior: 'smooth' });
             }
         }
-    });
 
-    // 7. 체크 완료 후 이동
-    function checkAndNext(stepNum) {
-        const checks = document.querySelectorAll('.chk-item');
-        if (!Array.from(checks).every(c => c.checked)) { 
-            alert("모든 점검 항목을 체크해야 합니다."); 
-            return; 
+        function openEmergency() { nextStep('step-emergency'); }
+
+        function checkAndNext(stepNum) {
+            const checks = document.querySelectorAll('.chk-item');
+            if (!Array.from(checks).every(c => c.checked)) { 
+                alert("모든 점검 항목을 체크해야 합니다."); 
+                return; 
+            }
+            nextStep(stepNum);
         }
-        nextStep(stepNum);
-    }
 
-    // 8. 최종 전송
-    function saveAndComplete() {
-        const btn = document.getElementById('finalBtn');
-        if (btn) { btn.disabled = true; btn.innerText = "저장 중..."; }
-        
-        const params = new URLSearchParams({ ...workerData, action: "update", status: "교육완료" });
-        
-        fetch(scriptURL + "?" + params.toString(), { method: 'GET', mode: 'no-cors' })
-        .then(() => { showFinalMessage(); })
-        .catch((err) => {
-            console.error("전송 에러:", err);
-            if (btn) { btn.disabled = false; btn.innerText = "교육 완료 및 제출"; }
-            alert("전송 실패. 다시 시도해주세요.");
+        // 체크리스트 진행률 업데이트
+        document.addEventListener('change', (e) => {
+            if (e.target.classList.contains('chk-item')) {
+                const checks = document.querySelectorAll('.chk-item');
+                const progressBar = document.getElementById('progress-bar');
+                const progressText = document.getElementById('progress-text');
+                const readyMsg = document.getElementById('ready-msg');
+                const percent = Math.round((Array.from(checks).filter(c => c.checked).length / checks.length) * 100);
+                progressBar.style.width = percent + '%';
+                progressText.innerText = percent + '%';
+                if (percent === 100) readyMsg.classList.remove('hidden');
+                else readyMsg.classList.add('hidden');
+            }
         });
-    }
 
-    // 9. 최종 메시지
-    function showFinalMessage() {
-        document.body.innerHTML = `
-            <div style="display: flex; justify-content: center; align-items: center; min-height: 100vh; background-color: #f8fafc; font-family: sans-serif;">
-                <div style="font-size: 2rem; font-weight: 900; color: #0284c7; text-align: center; padding: 20px;">
-                    오늘 하루도<br>안전하게 작업하자
+        // 최종 단계: 시트 업데이트 (교육완료)
+        function submitToSheet() {
+            const btn = document.getElementById('finalBtn');
+            btn.disabled = true; 
+            btn.innerText = "저장 중...";
+
+            // 동일한 날짜/이름/번호 행을 찾아 '교육완료'로 업데이트
+            sendToGas("교육완료");
+
+            setTimeout(() => {
+                showFinalMessage();
+            }, 1000);
+        }
+
+        function showFinalMessage() {
+            document.body.innerHTML = `
+                <div style="display: flex; justify-content: center; align-items: center; min-height: 100vh; background-color: #f8fafc;">
+                    <div style="font-size: 3rem; font-weight: 900; color: #0284c7; line-height: 1.4; text-align: center; word-break: break-all; letter-spacing: 0.5rem;">
+                        오<br>늘<br>하<br>루<br>도<br><br>안<br>전<br>하<br>게<br><br>작<br>업<br>하<br>자
+                    </div>
                 </div>
-            </div>
-        `;
-        window.scrollTo(0, 0);
-    }
-</script>
+            `;
+            window.scrollTo(0, 0);
+        }
+    </script>
 </body>
 </html>
