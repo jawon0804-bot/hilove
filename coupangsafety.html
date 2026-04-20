@@ -310,10 +310,10 @@
     // 원본 항목 데이터 저장용 객체
     let workerData = { 
         date: "",
-        comp: "", // 서버의 'comp' 키와 일치시킴
+        comp: "", 
         name: "", 
         phone: "", 
-        addr: "", // 서버의 'addr' 키와 일치시킴
+        addr: "", 
         reason: "",
         status: ""
     };
@@ -334,19 +334,25 @@
 
     /**
      * 서버(Google Apps Script)로 데이터를 전송하는 핵심 함수
+     * 버튼이 안 눌리는 문제를 해결하기 위해 google.script.run을 호출합니다.
      */
     function sendToGas(statusValue) {
         workerData.status = statusValue;
         
-        // google.script.run을 사용하여 서버의 logDataToSheet 함수 호출
-        google.script.run
-            .withSuccessHandler(function(response) {
-                console.log("전송 성공:", response);
-            })
-            .withFailureHandler(function(error) {
-                console.error("전송 실패:", error);
-            })
-            .logDataToSheet(workerData); // 객체 하나를 통째로 전달
+        // 버튼이 먹통이 되지 않도록 에러 처리를 포함한 구글 전용 호출
+        if (typeof google !== 'undefined' && google.script && google.script.run) {
+            google.script.run
+                .withSuccessHandler(function(response) {
+                    console.log("전송 성공:", response);
+                })
+                .withFailureHandler(function(error) {
+                    console.error("전송 실패:", error);
+                    alert("데이터 저장 중 오류가 발생했습니다: " + error);
+                })
+                .logDataToSheet(workerData);
+        } else {
+            console.error("구글 스크립트 환경이 아닙니다. 배포된 URL에서 확인하세요.");
+        }
     }
 
     // 1단계: 정보 저장 및 시작 알림
@@ -363,11 +369,12 @@
             return; 
         }
 
-        // '교육미이수' 상태로 첫 기록 생성
+        // 서버에 기록 전송
         sendToGas("교육미이수");
         nextStep(nextStepId);
     }
 
+    // 다음 단계 이동 함수
     function nextStep(target) {
         document.querySelectorAll('.step-section').forEach(s => s.classList.remove('active'));
         const targetElement = (typeof target === 'string') ? document.getElementById(target) : document.getElementById('step-' + target);
@@ -379,9 +386,10 @@
 
     function openEmergency() { nextStep('step-emergency'); }
 
+    // 체크리스트 확인 로직
     function checkAndNext(stepNum) {
         const checks = document.querySelectorAll('.chk-item');
-        if (!Array.from(checks).every(c => c.checked)) { 
+        if (checks.length > 0 && !Array.from(checks).every(c => c.checked)) { 
             alert("모든 점검 항목을 체크해야 합니다."); 
             return; 
         }
@@ -395,11 +403,14 @@
             const progressBar = document.getElementById('progress-bar');
             const progressText = document.getElementById('progress-text');
             const readyMsg = document.getElementById('ready-msg');
-            const percent = Math.round((Array.from(checks).filter(c => c.checked).length / checks.length) * 100);
-            if(progressBar) progressBar.style.width = percent + '%';
-            if(progressText) progressText.innerText = percent + '%';
-            if (percent === 100) readyMsg.classList.remove('hidden');
-            else readyMsg.classList.add('hidden');
+            
+            if (checks.length > 0) {
+                const percent = Math.round((Array.from(checks).filter(c => c.checked).length / checks.length) * 100);
+                if(progressBar) progressBar.style.width = percent + '%';
+                if(progressText) progressText.innerText = percent + '%';
+                if (percent === 100 && readyMsg) readyMsg.classList.remove('hidden');
+                else if (readyMsg) readyMsg.classList.add('hidden');
+            }
         }
     });
 
@@ -411,7 +422,7 @@
             btn.innerText = "저장 중...";
         }
 
-        // '교육완료' 상태로 다시 전송 (서버 로직에 따라 행이 추가됩니다)
+        // 최종 상태 전송
         sendToGas("교육완료");
 
         setTimeout(() => {
@@ -419,6 +430,7 @@
         }, 1000);
     }
 
+    // 완료 메시지 표시
     function showFinalMessage() {
         document.body.innerHTML = `
             <div style="display: flex; justify-content: center; align-items: center; min-height: 100vh; background-color: #f8fafc;">
