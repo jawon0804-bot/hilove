@@ -296,39 +296,13 @@
     </section>
 
     </div>
-<script>
+    <script>
     // 1. 데이터 저장소
     let workerData = { company: "", name: "", phone: "", address: "", reason: "" };
+    // [중요] 과장님의 구글 앱스 스크립트 배포 URL을 여기에 넣으세요
     const scriptURL = "https://script.google.com/macros/s/AKfycbxrL3i0FLT277uWUhqit15q1ScVY_srnjy0oYHR0FflKgHb9lgVqxytxnzAhYCZj8qh/exec";
 
-    // 2. 비상 버튼 이동
-    function openEmergency() { 
-        nextStep('step-emergency'); 
-    }
-
-    // 3. 작업 시작 (정보 저장 및 이동)
-    function saveAndStart(targetId) {
-        workerData.company = document.getElementById('comp').value;
-        workerData.name = document.getElementById('name').value;
-        workerData.phone = document.getElementById('tel').value;
-        workerData.address = document.getElementById('addr').value;
-        workerData.reason = document.getElementById('reason').value;
-        
-        if(!workerData.name) { alert("성함을 입력해주세요."); return; }
-        nextStep(targetId);
-    }
-
-    // 4. 섹션 이동
-    function nextStep(targetId) {
-        const targetElement = document.getElementById(targetId);
-        if (targetElement) {
-            document.querySelectorAll('.step-section').forEach(s => s.classList.remove('active'));
-            targetElement.classList.add('active');
-            window.scrollTo(0, 0);
-        }
-    }
-
-    // 5. 전화번호 자동 하이픈
+    // [추가] 전화번호 자동 하이픈 기능
     const telInput = document.getElementById('tel');
     if (telInput) {
         telInput.addEventListener('input', function(e) {
@@ -336,6 +310,56 @@
             if (val.length > 3 && val.length <= 7) val = val.slice(0, 3) + '-' + val.slice(3);
             else if (val.length > 7) val = val.slice(0, 3) + '-' + val.slice(3, 7) + '-' + val.slice(7);
             e.target.value = val;
+        });
+    }
+
+    // 2. 정보 저장 및 시작
+    function saveAndStart(targetId) {
+        workerData.company = document.getElementById('comp').value;
+        workerData.name = document.getElementById('name').value;
+        workerData.phone = document.getElementById('tel').value;
+        workerData.address = document.getElementById('addr').value;
+        workerData.reason = document.getElementById('reason').value;
+        
+        if(!workerData.name || !workerData.phone) { 
+            alert("성함과 연락처를 모두 입력해주세요."); 
+            return; 
+        }
+        nextStep(targetId);
+    }
+
+    // 3. 페이지 이동
+    function nextStep(targetId) {
+        document.querySelectorAll('.step-section').forEach(s => s.classList.remove('active'));
+        document.getElementById(targetId).classList.add('active');
+        window.scrollTo(0, 0);
+    }
+
+    // 4. 최종 전송 (스프레드시트 데이터 기록)
+    function saveAndComplete() {
+        const btn = document.getElementById('finalBtn');
+        btn.disabled = true;
+        btn.innerText = "전송 중...";
+
+        // 과장님이 작성하신 doGet의 action 파라미터에 맞게 전송
+        const params = new URLSearchParams({
+            ...workerData,
+            action: "append" // 데이터 새로 추가
+        });
+
+        fetch(scriptURL + "?" + params.toString(), {
+            method: 'GET',
+            mode: 'no-cors'
+        })
+        .then(() => {
+            alert("제출이 완료되었습니다.");
+            window.location.reload(); // 성공 시 리로드
+        })
+        .catch(err => {
+            console.error(err);
+            alert("전송 실패: " + err);
+            btn.disabled = false;
+            btn.innerText = "교육 완료 및 제출";
         });
     }
 
