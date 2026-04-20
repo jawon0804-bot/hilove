@@ -296,110 +296,110 @@
     </section>
 
     </div>
-
-    <script>
-    console.log("스크립트가 정상적으로 로드되었습니다."); // 이 줄 추가!    
+<script>
+    // 1. 데이터 저장소
     let workerData = { company: "", name: "", phone: "", address: "", reason: "" };
     const scriptURL = "https://script.google.com/macros/s/AKfycbxrL3i0FLT277uWUhqit15q1ScVY_srnjy0oYHR0FflKgHb9lgVqxytxnzAhYCZj8qh/exec";
 
-    document.getElementById('tel').addEventListener('input', function(e) {
-        let val = e.target.value.replace(/[^0-9]/g, '');
-        if (val.length > 3 && val.length <= 7) val = val.slice(0, 3) + '-' + val.slice(3);
-        else if (val.length > 7) val = val.slice(0, 3) + '-' + val.slice(3, 7) + '-' + val.slice(7);
-        e.target.value = val;
-    });
+    // 2. 비상 버튼 이동
+    function openEmergency() { 
+        nextStep('step-emergency'); 
+    }
 
-    function saveAndStart() {
-        workerData.company = document.getElementById('comp').value;
-        workerData.name = document.getElementById('name').value;
-        workerData.phone = document.getElementById('tel').value;
-        workerData.address = document.getElementById('addr').value;
-        workerData.reason = document.getElementById('reason').value;
-
-        if (!workerData.name || !workerData.phone) { 
-            alert("성함과 연락처는 필수입니다."); 
-            return; 
+    // 3. 섹션 이동 (번호 없어도 자동 이동)
+    function nextStep(targetId) {
+        if (!targetId) {
+            const current = document.querySelector('.step-section.active');
+            const next = current ? current.nextElementSibling : null;
+            if (next && next.classList.contains('step-section')) {
+                targetId = next.id;
+            } else {
+                return;
+            }
         }
+        
+        const targetElement = document.getElementById(targetId);
+        if (targetElement) {
+            document.querySelectorAll('.step-section').forEach(s => s.classList.remove('active'));
+            targetElement.classList.add('active');
+            targetElement.scrollIntoView({ behavior: 'smooth' });
+        }
+    }
 
-        const params = new URLSearchParams({...workerData, status: "교육미이수"});
-
-        fetch(scriptURL + "?" + params.toString(), { method: 'GET', mode: 'no-cors' })
-        .then(() => {
-            nextStep('step-1-5');
-        })
-        .catch((err) => {
-            console.log("전송 중 에러 발생: ", err);
-            alert("전송에 실패했습니다. 다시 시도해 주세요.");
+    // 4. 전화번호 자동 하이픈
+    const telInput = document.getElementById('tel');
+    if (telInput) {
+        telInput.addEventListener('input', function(e) {
+            let val = e.target.value.replace(/[^0-9]/g, '');
+            if (val.length > 3 && val.length <= 7) val = val.slice(0, 3) + '-' + val.slice(3);
+            else if (val.length > 7) val = val.slice(0, 3) + '-' + val.slice(3, 7) + '-' + val.slice(7);
+            e.target.value = val;
         });
     }
 
+    // 5. 체크리스트 진행률
+    document.addEventListener('change', (e) => {
+        if (e.target.classList.contains('chk-item')) {
+            const checks = document.querySelectorAll('.chk-item');
+            const progressBar = document.getElementById('progress-bar');
+            const progressText = document.getElementById('progress-text');
+            const readyMsg = document.getElementById('ready-msg');
+            
+            if (checks.length === 0) return;
+            
+            const percent = Math.round((Array.from(checks).filter(c => c.checked).length / checks.length) * 100);
+            
+            if (progressBar) progressBar.style.width = percent + '%';
+            if (progressText) progressText.innerText = percent + '%';
+            if (readyMsg) {
+                percent === 100 ? readyMsg.classList.remove('hidden') : readyMsg.classList.add('hidden');
+            }
+        }
+    });
+
+    // 6. 체크 완료 후 이동
+    function checkAndNext(stepNum) {
+        const checks = document.querySelectorAll('.chk-item');
+        if (!Array.from(checks).every(c => c.checked)) { 
+            alert("모든 점검 항목을 체크해야 합니다."); 
+            return; 
+        }
+        nextStep(stepNum);
+    }
+
+    // 7. 최종 전송
     function saveAndComplete() {
         const btn = document.getElementById('finalBtn');
-        btn.disabled = true;
-        btn.innerText = "저장 중...";
+        if (btn) {
+            btn.disabled = true;
+            btn.innerText = "저장 중...";
+        }
+        
         const params = new URLSearchParams({ ...workerData, action: "update", status: "교육완료" });
+        
         fetch(scriptURL + "?" + params.toString(), { method: 'GET', mode: 'no-cors' })
         .then(() => { showFinalMessage(); })
         .catch((err) => {
-            console.error("에러 발생:", err);
-            btn.disabled = false;
-            btn.innerText = "최종 확인 및 기록 저장";
+            console.error("전송 에러:", err);
+            if (btn) {
+                btn.disabled = false;
+                btn.innerText = "최종 확인 및 기록 저장";
+            }
+            alert("전송 실패. 다시 시도해주세요.");
         });
     }
 
-    function openEmergency() { nextStep('step-emergency'); }    
-        
-    function checkAndNext(stepNum) {
-            const checks = document.querySelectorAll('.chk-item');
-            if (!Array.from(checks).every(c => c.checked)) { alert("모든 점검 항목을 체크해야 합니다."); return; }
-            nextStep(stepNum);
-        }    
-         document.addEventListener('change', (e) => {
-            if (e.target.classList.contains('chk-item')) {
-                const checks = document.querySelectorAll('.chk-item');
-                const progressBar = document.getElementById('progress-bar');
-                const progressText = document.getElementById('progress-text');
-                const readyMsg = document.getElementById('ready-msg');
-                const percent = Math.round((Array.from(checks).filter(c => c.checked).length / checks.length) * 100);
-                progressBar.style.width = percent + '%';
-                progressText.innerText = percent + '%';
-                if (percent === 100) readyMsg.classList.remove('hidden');
-                else readyMsg.classList.add('hidden');
-
-    function nextStep(targetId) {
-    // 1. 만약 targetId가 안 들어왔다면? -> 바로 다음 섹션으로 이동!
-    if (!targetId) {
-        const current = document.querySelector('.step-section.active');
-        const next = current.nextElementSibling;
-        if (next && next.classList.contains('step-section')) {
-            targetId = next.id;
-        } else {
-            console.log("다음 단계가 없습니다.");
-            return;
-        }
-    }
-
-    const targetElement = document.getElementById(targetId);
-    if (!targetElement) {
-        console.error("🚨 해당 섹션을 찾을 수 없습니다: " + targetId);
-        return;
-    }
-    
-    document.querySelectorAll('.step-section').forEach(s => s.classList.remove('active'));
-    targetElement.classList.add('active');
-    targetElement.scrollIntoView({ behavior: 'smooth' });
-}
-       
+    // 8. 최종 메시지
     function showFinalMessage() {
         document.body.innerHTML = `
-            <div style="display: flex; justify-content: center; align-items: center; min-height: 100vh; background-color: #f8fafc;">
+            <div style="display: flex; justify-content: center; align-items: center; min-height: 100vh; background-color: #f8fafc; font-family: sans-serif;">
                 <div style="font-size: 2rem; font-weight: 900; color: #0284c7; text-align: center; padding: 20px;">
                     오늘 하루도<br>안전하게 작업하자
                 </div>
             </div>
         `;
         window.scrollTo(0, 0);
-    }            
+    }
 </script>
 </body>
 </html>
