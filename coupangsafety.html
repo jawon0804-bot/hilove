@@ -355,10 +355,10 @@
         // 1단계: 정보 저장 및 시작 알림
         function saveAndNext(nextStepId) {
             workerData.date = getToday();
-            workerData.company = document.getElementById('comp').value;
+            workerData.company = document.getElementById('company').value;
             workerData.name = document.getElementById('name').value;
-            workerData.phone = document.getElementById('tel').value;
-            workerData.address = document.getElementById('addr').value;
+            workerData.phone = document.getElementById('phone').value;
+            workerData.address = document.getElementById('address').value;
             workerData.reason = document.getElementById('reason').value;
 
             if (!workerData.name || !workerData.phone) { 
