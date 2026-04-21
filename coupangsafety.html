@@ -320,7 +320,7 @@
         const scriptURL = "https://script.google.com/macros/s/AKfycbxrL3i0FLT277uWUhqit15q1ScVY_srnjy0oYHR0FflKgHb9lgVqxytxnzAhYCZj8qh/exec";
 
         // 연락처 하이픈 자동 처리
-        document.getElementById('tel').addEventListener('input', function(e) {
+        document.getElementById('phone').addEventListener('input', function(e) {
             let val = e.target.value.replace(/[^0-9]/g, '');
             if (val.length > 3 && val.length <= 7) val = val.slice(0, 3) + '-' + val.slice(3);
             else if (val.length > 7) val = val.slice(0, 3) + '-' + val.slice(3, 7) + '-' + val.slice(7);
