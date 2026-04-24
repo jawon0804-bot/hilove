@@ -31,7 +31,7 @@
         
         <!-- STEP 1: 작업자 정보 등록 -->
         <section id="step-1" class="step-section active">
-            <div class="card p-6 mt-4">
+            <div class="card p-6 mt-4 min-h-[620px] flex flex-col">
                 <div class="flex items-center justify-between mb-1 border-b-2 border-sky-100 pb-2">
                     <h2 class="text-2xl font-bold text-sky-700">👷‍♂️ 작업자 정보 등록</h2>
                     <div class="flex items-center">
@@ -40,15 +40,15 @@
                     </div>
                 </div>
                 <div class="flex justify-end pr-1 mb-4">
-                     <span class="text-[12px] text-slate-500 font-bold">비상 연락망 바로가기 ⬆️</span>
+                     <span class="text-[12px] text-slate-500 font-bold pr-0.5">비상 연락망 바로가기 ⬆️</span>
                 </div>
-                <div class="space-y-4">
+                <div class="flex-grow space-y-4">
                     <input type="text" id="company" placeholder="소속 (예: 맥서브)" class="w-full border-2 p-4 rounded-2xl outline-sky-500 bg-slate-50 border-slate-200">
                     <input type="text" id="name" placeholder="성함" class="w-full border-2 p-4 rounded-2xl outline-sky-500 bg-slate-50 border-slate-200">
                     <input type="tel" id="phone" maxlength="13" placeholder="연락처 (숫자만)" class="w-full border-2 p-4 rounded-2xl outline-sky-500 bg-slate-50 border-slate-200">
                     <input type="text" id="address" placeholder="주소 (시군구)" class="w-full border-2 p-4 rounded-2xl outline-sky-500 bg-slate-50 border-slate-200">
                     <input type="text" id="reason" placeholder="방문사유" class="w-full border-2 p-4 rounded-2xl outline-sky-500 bg-slate-50 border-slate-200">
-                    <button onclick="saveAndNext('step-1-5')" class="w-full bg-sky-600 text-white font-bold py-5 rounded-2xl shadow-lg mt-4 text-lg active:scale-[0.98]">
+                    <button onclick="saveAndNext('step-1-5')" class="mt-auto w-full bg-sky-600 text-white font-bold py-5 rounded-2xl shadow-lg mt-4 text-lg active:scale-[0.98]">
                         확인 및 대시보드 활성화
                     </button>
                 </div>
@@ -57,11 +57,11 @@
 
         <!-- STEP 1-5: 작업 표준 절차 -->
         <section id="step-1-5" class="step-section">
-            <div class="card p-6">
+            <div class="card p-6 min-h-[620px] flex flex-col">
                 <h2 class="text-center text-xl font-bold text-slate-800 mb-2">
                     <span class="text-[6vw] sm:text-[30px] font-bold font-sans">
                         <span style="color: #8B4513;">cou</span><span style="color: #E65100;">p</span><span style="color: #D4AC0D;">a</span><span style="color: #76C043;">n</span><span style="color: #00BFFF;">g</span><span style="color: #334155; margin-left: 5px;">ulsan2 sub-hub</span>
-                    </span><br><br>작업 표준 절차 및 준수 사항
+                    </span><p class="text-[5vw] sm:text-[18px] text-slate-700 mb-1">🔹작업 표준 절차 및 준수 사항🔹
                 </h2>
                 <div class="space-y-3">
                     <p class="pl-6 indent-[-15px] p-4 bg-slate-50 rounded-2xl border border-slate-100 text-sm font-medium">1. 지정 장소 외 절대 금연(흡연은 지정된 외부 흡연장소에서만 가능).</p>
@@ -69,14 +69,14 @@
                     <p class="pl-6 indent-[-15px] p-4 bg-slate-50 rounded-2xl border border-slate-100 text-sm font-medium">3. 현장 관리자의 사전 승인 없는 인화성 물질(점화기, 화학물질 등) 반입 금지.</p>
                     <p class="pl-6 indent-[-15px] p-4 bg-slate-50 rounded-2xl border border-slate-100 text-sm font-medium">4. 작업자는 사업장 내 유해▪위험요인을 발견하면 즉시 관리자에게 보고.</p>
                     <p class="pl-6 indent-[-15px] p-4 bg-slate-50 rounded-2xl border border-slate-100 text-sm font-medium">5. 작업 완료 후 발생한 폐기물 즉시 수거 및 현장 원상 복구.</p>
-                    <button onclick="nextStep(2)" class="w-full bg-slate-800 text-white py-4 rounded-2xl font-bold mt-6 active:scale-[0.98]">내용 확인 완료</button>
+                    <button onclick="nextStep(2)" class="mt-auto w-full bg-slate-800 text-white py-4 rounded-2xl font-bold mt-6 active:scale-[0.98]">내용 확인 완료</button>
                 </div>
             </div>
         </section>
 
         <!-- STEP 2: 감전 사고 예방 -->
         <section id="step-2" class="step-section">
-            <div class="card p-6 ">
+            <div class="card p-6 min-h-[620px] flex flex-col">
                <div class="bg-white rounded-2xl border-t-4 border-amber-500 overflow-hidden flex flex-col">
                     <div class="p-6 bg-slate-50 border-b border-slate-100">
                         <div class="text-4xl mb-2">⚡</div>
@@ -84,7 +84,7 @@
                         <p class="text-[3.2vw] sm:text-[13px] text-slate-550 mb-2 pl-1">▪️안전 수칙을 숙지하고 사고를 차단하십시오.</p>
                     </div>
                     <div class="p-6">
-                        <ul class="space-y-4">
+                        <ul class="flex-grow space-y-4">
                             <li class="flex items-start gap-3">
                                 <span class="bg-amber-100 text-amber-700 w-6 h-6 rounded-full flex items-center justify-center font-bold text-sm shrink-0">1</span>
                                 <div><strong class="block text-slate-700">전원 차단 원칙</strong><span class="text-sm text-slate-600 leading-relaxed">작업 전 반드시 해당 설비의 전원을 차단하고 '작업 중' 표지판을 부착합니다.</span></div>
@@ -100,13 +100,13 @@
                         </ul>
                     </div>
                 </div>
-                <button onclick="nextStep(3)" class="w-full bg-slate-800 text-white py-4 rounded-2xl font-bold mt-6 active:scale-[0.98]">내용을 확인하였습니다 (1/8)</button>
+                <button onclick="nextStep(3)" class="mt-auto w-full bg-slate-800 text-white py-4 rounded-2xl font-bold mt-6 active:scale-[0.98]">내용을 확인하였습니다 (1/8)</button>
             </div>
         </section>
 
         <!-- STEP 3: 추락 사고 예방 -->
         <section id="step-3" class="step-section">
-            <div class="card p-6">
+            <div class="card p-6 min-h-[620px] flex flex-col">
                  <div class="bg-white rounded-2xl border-t-4 border-sky-500 overflow-hidden flex flex-col">
                     <div class="p-6 bg-slate-50 border-b border-slate-100">
                         <div class="text-4xl mb-2">🪜</div>
@@ -114,7 +114,7 @@
                         <p class="text-[3.2vw] sm:text-[13px] text-slate-550 mb-2 pl-1">▪️안전 수칙을 숙지하고 사고를 차단하십시오.</p>
                     </div>
                     <div class="p-6">
-                        <ul class="space-y-4">
+                        <ul class="flex-grow space-y-4">
                             <li class="flex items-start gap-3">
                                 <span class="bg-sky-100 text-sky-700 w-6 h-6 rounded-full flex items-center justify-center font-bold text-sm shrink-0">1</span>
                                 <div><strong class="block text-slate-700">사다리 작업 안전</strong><span class="text-sm text-slate-600 leading-relaxed">2인 1조 작업을 원칙, 사다리 하부에서 보조자 지지. (A형 사다리 최상단 금지, 아웃트리거 장착 사다리사용).</span></div>
@@ -130,13 +130,13 @@
                         </ul>
                     </div>
                 </div>
-                <button onclick="nextStep(4)" class="w-full bg-slate-800 text-white py-4 rounded-2xl font-bold mt-6 active:scale-[0.98]">내용을 확인하였습니다 (2/8)</button>
+                <button onclick="nextStep(4)" class="mt-auto w-full bg-slate-800 text-white py-4 rounded-2xl font-bold mt-6 active:scale-[0.98]">내용을 확인하였습니다 (2/8)</button>
             </div>
         </section>
 
         <!-- STEP 4: 밀폐공간 -->
         <section id="step-4" class="step-section">
-            <div class="card p-6">
+            <div class="card p-6 min-h-[620px] flex flex-col">
                 <div class="bg-white rounded-2xl border-t-4 border-emerald-500 overflow-hidden flex flex-col">
                     <div class="p-6 bg-slate-50 border-b border-slate-100">
                         <div class="text-4xl mb-2">🕳️</div>
@@ -144,7 +144,7 @@
                         <p class="text-[3.2vw] sm:text-[13px] text-slate-550 mb-2 pl-1">▪️안전 수칙을 숙지하고 사고를 차단하십시오.</p>
                     </div>
                     <div class="p-6">
-                        <ul class="space-y-6">
+                        <ul class="flex-grow space-y-10">
                             <li class="flex items-start gap-3">
                                 <span class="bg-emerald-100 text-emerald-700 w-6 h-6 rounded-full flex items-center justify-center font-bold text-sm shrink-0">1</span>
                                 <div><strong class="block text-slate-800">가스 농도 측정</strong><span class="text-sm text-slate-600">입고 전 산소 및 유해가스 농도를 반드시 측정합니다.</span></div>
@@ -160,67 +160,67 @@
                         </ul>
                     </div>
                 </div>
-                <button onclick="nextStep(5)" class="w-full bg-slate-800 text-white py-4 rounded-2xl font-bold mt-6 active:scale-[0.98]">내용을 확인하였습니다 (3/8)</button>
+                <button onclick="nextStep(5)" class="mt-auto w-full bg-slate-800 text-white py-4 rounded-2xl font-bold mt-6 active:scale-[0.98]">내용을 확인하였습니다 (3/8)</button>
             </div>
         </section>
 
         <!-- STEP 5: 감전 SOP -->
         <section id="step-5" class="step-section">
-            <div class="card p-6">
+            <div class="card p-6 min-h-[620px] flex flex-col">
                 <h2 class="text-xl font-bold text-slate-800 mb-4">🚨 긴급상황 대응 (SOP)</h2>
                 <p class="text-xs text-slate-500 mb-4 pl-4">▪️위급 상황 발생 시 행동 요령입니다.</p>
                 <div class="bg-slate-50 p-4 rounded-2xl border border-slate-100">
                     <h3 class="text-xl font-bold text-amber-700 mb-4 flex items-center gap-2"><span>⚡</span> 감전 사고 발생 시</h3>
-                    <div class="space-y-8">
+                    <div class="flex-grow space-y-6">
                         <div class="flex gap-5"><div class="w-8 h-8 rounded-full bg-amber-100 text-amber-700 flex items-center justify-center font-bold text-sm shrink-0">1</div><p class="text-sm text-slate-700"><strong>전원 차단</strong><br> 사고자를 직접 만지지 말고 분전함의 메인 스위치를 즉시 내립니다. <b class="text-red-500">(차단 불가능 시 절연체 물건으로 사고자를 분리)</b></p></div>
                         <div class="flex gap-3"><div class="w-8 h-8 rounded-full bg-amber-100 text-amber-700 flex items-center justify-center font-bold text-sm shrink-0">2</div><p class="text-sm text-slate-700"><strong>구조 요청</strong><br> 즉시 <b class="text-red-500">119</b>에 신고하고 사내 <b class="text-red-500">안전관리자</b>에게 보고합니다.</p></div>
                         <div class="flex gap-3"><div class="w-8 h-8 rounded-full bg-amber-100 text-amber-700 flex items-center justify-center font-bold text-sm shrink-0">3</div><p class="text-sm text-slate-700"><strong>응급조치</strong><br> 의식 및 호흡 여부를 확인하고, 호흡이 없을 경우 <b class="text-red-500">119</b> 도착 전까지 <b class="text-red-500">심폐소생술(CPR)</b>을 실시합니다.</p></div>
                     </div>
                 </div>
-                <button onclick="nextStep(6)" class="w-full bg-slate-800 text-white py-4 rounded-2xl font-bold mt-6 active:scale-[0.98]">내용을 확인하였습니다 (4/8)</button>
+                <button onclick="nextStep(6)" class="mt-auto w-full bg-slate-800 text-white py-4 rounded-2xl font-bold mt-6 active:scale-[0.98]">내용을 확인하였습니다 (4/8)</button>
             </div>
         </section>
 
         <!-- STEP 6: 화재 SOP -->
         <section id="step-6" class="step-section">
-            <div class="card p-6">
+            <div class="card p-6 min-h-[620px] flex flex-col">
                 <h2 class="text-xl font-bold text-slate-800 mb-4">🚨 긴급상황 대응 (SOP)</h2>
                 <p class="text-xs text-slate-500 mb-4 pl-4">▪️위급 상황 발생 시 행동 요령입니다.</p>
                 <div class="bg-slate-50 p-4 rounded-2xl border border-slate-100">
                     <h3 class="text-xl font-bold text-red-600 mb-4 flex items-center gap-2"><span>🔥</span> 화재 발생 시</h3>
-                    <div class="space-y-10 text-sm">
+                    <div class="flex-grow space-y-8 text-sm">
                         <div class="flex gap-3"><div class="w-8 h-8 rounded-full bg-amber-100 text-amber-700 flex items-center justify-center font-bold text-sm shrink-0">1</div><p class="text-sm text-slate-700"><strong>전파 및 신고</strong><br> "불이야!"라고 크게 외쳐 주변에 알리고 소화전 발신기를 누른 후 <b class="text-red-500">119</b>에 신고합니다. </p></div>
                         <div class="flex gap-3"><div class="w-8 h-8 rounded-full bg-amber-100 text-amber-700 flex items-center justify-center font-bold text-sm shrink-0">2</div><p class="text-sm text-slate-700"><strong>초기 소화</strong><br> 가스계 소화기(CO2, 할론 등)를 사용하여 초기 진압을 시도합니다. <b class="text-red-500">(전기 화재 물 사용 금지)</b></p></div>
                         <div class="flex gap-3"><div class="w-8 h-8 rounded-full bg-amber-100 text-amber-700 flex items-center justify-center font-bold text-sm shrink-0">3</div><p class="text-sm text-slate-700"><strong>대피</strong><br> 진압이 어려울 경우 젖은 수건으로 코와 입을 막고 낮은 자세로 <b class="text-red-500">비상구</b>를 통해 탈출합니다.</p></div>
                     </div>
                 </div>
-                <button onclick="nextStep(7)" class="w-full bg-slate-800 text-white py-4 rounded-2xl font-bold mt-6 active:scale-[0.98]">내용을 확인하였습니다 (5/8)</button>
+                <button onclick="nextStep(7)" class="mt-auto w-full bg-slate-800 text-white py-4 rounded-2xl font-bold mt-6 active:scale-[0.98]">내용을 확인하였습니다 (5/8)</button>
             </div>
         </section>
 
         <!-- STEP 7: 장애 SOP -->
         <section id="step-7" class="step-section">
-            <div class="card p-6">
+            <div class="card p-6 min-h-[620px] flex flex-col">
                 <h2 class="text-xl font-bold text-slate-800 mb-4">🚨 긴급상황 대응 (SOP)</h2>
                 <p class="text-xs text-slate-500 mb-4 pl-4">▪️위급 상황 발생 시 행동 요령입니다.</p>
                 <div class="bg-slate-50 p-4 rounded-2xl border border-slate-100">
                     <h3 class="text-xl font-bold text-blue-600 mb-4 flex items-center gap-2"><span>💻</span> 설비 장애로 인한 긴급 정지</h3>
-                    <div class="space-y-10 text-sm">
+                    <div class="flex-grow space-y-10 text-sm">
                         <div class="flex gap-3"><div class="w-8 h-8 rounded-full bg-amber-100 text-amber-700 flex items-center justify-center font-bold text-sm shrink-0">1</div><p class="text-sm text-slate-700"><strong>영업 영향 분석</strong><br> 장애 범위를 신속히 파악하고 <b class="text-red-500">유관 부서에 공지</b>합니다.</p></div>
                         <div class="flex gap-3"><div class="w-8 h-8 rounded-full bg-amber-100 text-amber-700 flex items-center justify-center font-bold text-sm shrink-0">2</div><p class="text-sm text-slate-700"><strong>복구 우선순위</strong><br> <b class="text-red-500">핵심 코어 장비</b>부터 순차적으로 복구를 시도합니다.</p></div>
                         <div class="flex gap-3"><div class="w-8 h-8 rounded-full bg-amber-100 text-amber-700 flex items-center justify-center font-bold text-sm shrink-0">3</div><p class="text-sm text-slate-700"><strong>원인 기록</strong><br> 복구 후 로그 분석을 통해 <b class="text-red-500">재발 방지 대책</b>을 수립합니다.</p></div>
                     </div>
                 </div>
-                <button onclick="nextStep(8)" class="w-full bg-slate-800 text-white py-4 rounded-2xl font-bold mt-6 active:scale-[0.98]">내용을 확인하였습니다 (6/8)</button>
+                <button onclick="nextStep(8)" class="mt-auto w-full bg-slate-800 text-white py-4 rounded-2xl font-bold mt-6 active:scale-[0.98]">내용을 확인하였습니다 (6/8)</button>
             </div>
         </section>
 
         <!-- STEP 8: TBM 체크리스트 -->
         <section id="step-8" class="step-section">
-            <div class="card p-6">
+            <div class="card p-6 min-h-[620px] flex flex-col">
                 <h2 class="text-xl font-bold text-slate-800 mb-4">📝 작업 전 안전점검 체크리스트 (TBM)</h2>
-                <p class="text-xs text-slate-500 leading-relaxed mb-4 pl-4">▪️작업 전 확인 사항을 체크해 주시기 바랍니다.</p>
-                <div class="space-y-3">
+                <p class="text-xs text-slate-500 leading-relaxed mb-4 pl-4">☑️작업 전 확인 사항을 체크해 주시기 바랍니다.</p>
+                <div class="flex-grow space-y-2">
                     <label class="flex items-center gap-3 p-4 bg-slate-50 rounded-2xl border border-slate-100 cursor-pointer active:bg-slate-100">
                         <input type="checkbox" class="chk-item w-6 h-6 accent-sky-600 shrink-0">
                         <span class="text-sm font-medium">오늘 작업에 적합한 보호구(안전모, 안전화, 안전그네등)를 구비했는가?</span>
@@ -248,13 +248,13 @@
                     </div>
                     <div id="ready-msg" class="hidden text-center mt-2 font-bold text-green-600 animate-bounce">✅ 작업 준비 완료!</div>
                 </div>
-                <button onclick="checkAndNext(9)" class="w-full bg-slate-800 text-white py-4 rounded-2xl font-bold mt-6 active:scale-[0.98]">점검 완료 (7/8)</button>
+                <button onclick="checkAndNext(9)" class="mt-auto w-full bg-slate-800 text-white py-4 rounded-2xl font-bold mt-6 active:scale-[0.98]">점검 완료 (7/8)</button>
             </div>
         </section>
 
         <!-- STEP 9: 최종 비상연락망 및 저장 -->
         <section id="step-9" class="step-section">
-            <div class="card p-12">
+            <div class="card p-12 min-h-[620px] flex flex-col">
                 <h2 class="text-xl font-bold text-slate-800 mb-4">📞 긴급 비상 연락망</h2>
                 <div class="grid grid-cols-1 gap-6">
                     <a href="tel:119" class="p-4 rounded-2xl bg-red-50 border border-red-100 block transition active:bg-red-100">
@@ -274,7 +274,7 @@
                         <p class="text-lg font-bold text-slate-700 leading-tight">010-9999-9999</p>
                     </a>
                 </div>
-                <button id="finalBtn" onclick="submitToSheet()" class="w-full bg-sky-600 text-white py-5 rounded-2xl font-black text-xl shadow-lg mt-6 active:scale-[0.98]">최종 확인 및 기록 저장</button>
+                <button id="finalBtn" onclick="submitToSheet()" class="mt-auto w-full bg-sky-600 text-white py-5 rounded-2xl font-black text-xl shadow-lg mt-6 active:scale-[0.98]">최종 확인 및 기록 저장</button>
             </div>
         </section>
 
