@@ -30,7 +30,7 @@
     <div class="max-w-md mx-auto min-h-screen flex flex-col p-4 justify-start">
 
         <div id="global-back-button" class="fixed top-5 left-5 z-[100]" style="display: none;">
-          <button onclick="handleBack()" class="w-10 h-10 bg-white/80 backdrop-blur-sm shadow-md rounded-full flex items-center justify-center hover:bg-gray-100 border border-slate-200 transition-all active:scale-95">
+          <button onclick="handleBack()" class="w-10 h-10 bg-transparent backdrop-blur-sm shadow-md rounded-full flex items-center justify-center hover:bg-gray-100 border border-slate-200 transition-all active:scale-95">
             ←
           </button>
         </div>
@@ -420,6 +420,7 @@
           else if (id === 'step-6') nextStep('step-5');
           else if (id === 'step-7') nextStep('step-6');
           else if (id === 'step-8') nextStep('step-7');
+          else if (id === 'step-9') nextStep('step-8');  
         } 
 
         // 체크리스트 진행률 업데이트
