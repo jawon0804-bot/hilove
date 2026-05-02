@@ -29,7 +29,7 @@
 
     <div class="max-w-md mx-auto min-h-screen flex flex-col p-4 justify-start">
 
-        <div id="global-back-button" class="fixed top-5 left-5 z-[100]">
+        <div id="global-back-button" class="fixed top-5 left-5 z-[100]" style="display: none;">
           <button onclick="handleBack()" class="w-10 h-10 bg-white/80 backdrop-blur-sm shadow-md rounded-full flex items-center justify-center hover:bg-gray-100 border border-slate-200 transition-all active:scale-95">
             ←
           </button>
@@ -376,11 +376,21 @@
         }
 
         function nextStep(target) {
+            // 1. 화면 전환 (기존 로직)
             document.querySelectorAll('.step-section').forEach(s => s.classList.remove('active'));
             const targetElement = (typeof target === 'string') ? document.getElementById(target) : document.getElementById('step-' + target);
+    
             if(targetElement) {
                 targetElement.classList.add('active');
                 window.scrollTo({ top: 0, behavior: 'smooth' });
+
+            // 2. ★ 뒤로가기 버튼 제어 추가 ★
+            const backBtn = document.getElementById('global-back-button');
+            if (backBtn) {
+                // 현재 도착한 곳이 step-1 이거나 step-1-5 이면 숨기고, 아니면 보이기
+                const tid = targetElement.id;
+                backBtn.style.display = (tid === 'step-1' || tid === 'step-1-5') ? 'none' : 'block';
+            }
             }
         }
 
@@ -403,8 +413,7 @@
           const id = currentStep.id;
 
         // 현재 ID에 따라 어디로 갈지 정합니다.
-          if (id === 'step-1-5') nextStep('step-1');
-          else if (id === 'step-2') nextStep('step-1-5');
+          if (id === 'step-2') nextStep('step-1-5');
           else if (id === 'step-3') nextStep('step-2');
           else if (id === 'step-4') nextStep('step-3');
           else if (id === 'step-5') nextStep('step-4');
