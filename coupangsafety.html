@@ -241,7 +241,7 @@
                         <span class="text-sm font-medium">2인 1조 작업 체계가 갖춰졌는가?</span>
                     </label>
                 </div>
-                <div class="mt-4">
+                <div class="mt-5">
                     <div class="flex justify-between items-center mb-2">
                           <span class="text-sm font-bold text-slate-600">진행률</span>
                           <span id="progress-text" class="text-sm font-bold text-sky-600">0%</span>
@@ -389,7 +389,7 @@
             if (backBtn) {
                 // 현재 도착한 곳이 step-1 이거나 step-1-5 이면 숨기고, 아니면 보이기
                 const tid = targetElement.id;
-                backBtn.style.display = (tid === 'step-1' || tid === 'step-1-5' || tid === 'emergency') ? 'none' : 'block';
+                backBtn.style.display = (tid === 'step-1' || tid === 'step-1-5' || tid === 'step-emergency') ? 'none' : 'block';
             }
             }
         }
