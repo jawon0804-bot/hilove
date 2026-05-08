@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Maxerve Facility System</title>
+    <style>
+        :root { --primary: #1a73e8; --success: #34a853; --warning: #f39c12; --bg: #f8f9fa; }
+        body { font-family: 'Malgun Gothic', sans-serif; background-color: var(--bg); margin: 0; padding: 15px; color: #333; line-height: 1.6; }
+        .card { background: white; border-radius: 12px; padding: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.08); margin-bottom: 20px; }
+        h1 { font-size: 1.2rem; color: var(--primary); border-left: 5px solid var(--primary); padding-left: 10px; margin-bottom: 20px; }
+        h2 { font-size: 0.95rem; background: #f1f3f4; padding: 10px; border-radius: 6px; margin: 20px 0 10px 0; font-weight: bold; }
+        
+        .item { margin-bottom: 15px; }
+        label { display: block; font-weight: bold; margin-bottom: 8px; font-size: 0.85rem; color: #555; }
+        input, select, textarea { width: 100%; padding: 12px; border: 1px solid #dadce0; border-radius: 8px; box-sizing: border-box; font-size: 1rem; transition: border 0.3s; }
+        input:focus { border-color: var(--primary); outline: none; }
+        
+        button { width: 100%; padding: 16px; border: none; border-radius: 10px; font-size: 1rem; font-weight: bold; cursor: pointer; transition: 0.2s; }
+        .btn-auth { background: var(--primary); color: white; }
+        .btn-photo { background: var(--warning); color: white; margin: 10px 0; }
+        .btn-submit { background: var(--success); color: white; margin-top: 25px; font-size: 1.1rem; }
+        
+        .hidden { display: none; }
+        #photo-preview-container { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 10px; }
+        .preview-box { width: 70px; height: 70px; border-radius: 6px; overflow: hidden; border: 1px solid #ddd; position: relative; }
+        .preview-box img { width: 100%; height: 100%; object-fit: cover; }
+        
+        .status-tag { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 0.75rem; background: #e8f0fe; color: var(--primary); margin-bottom: 10px; }
+    </style>
+</head>
+<body>
+
+<!-- [STEP 1] 점검자 인증 섹션 -->
+<div id="step-auth" class="card">
+    <h1>🔑 현장 점검자 확인</h1>
+    <div class="item">
+        <label>성명 및 사번 입력</label>
+        <input type="text" id="worker-info" placeholder="예: 이삼사 / 12345">
+    </div>
+    <button class="btn-auth" onclick="startInspection()">점검 시작하기</button>
+</div>
+
+<!-- [STEP 2] 설비 점검 양식 -->
+<form id="inspection-form" class="hidden">
+    <div class="card">
+        <div id="facility-info" class="status-tag">설비 인식 중...</div>
+        <h1 id="facility-title">점검표</h1>
+        
+        <!-- [전기설비 섹션] -->
+        <div id="sec-전기_01" class="hidden section-content">
+        <h2>1. 수변전 점검일지</h2>
+           
+        <h3>1. HV-4 MAIN VCB</h3>
+          <div class="item"><label>전압 (KV)</label><input type="number" name="vcb_kv" placeholder=" HV-4 MAIN VCB_KV" required></div>
+          <div class="item"><label>전류 (A) - R</label><input type="number" name="vcb_a_r" placeholder=" HV-4 MAIN VCB_R" required></div>
+          <div class="item"><label>전류 (A) - S</label><input type="number" name="vcb_a_s" placeholder=" HV-4 MAIN VCB_S" required></div>
+          <div class="item"><label>전류 (A) - T</label><input type="number" name="vcb_a_t" placeholder=" HV-4 MAIN VCB_T" required></div>
+          <div class="item"><label>전력 (KW)</label><input type="number" name="vcb_kw" placeholder=" HV-4 MAIN VCB_KW" required></div>
+          <div class="item"><label>역률 (COS)</label><input type="number" name="vcb_cos" placeholder=" HV-4 MAIN VCB_COS" required></div>
+
+        <h3>2. LV1</h3>
+          <div class="item"><label>전압 (V)</label><input type="number" name="lv1_v" placeholder="V" required></div>
+          <div class="item"><label>전류 (A) - R</label><input type="number" name="lv1_a_r" placeholder="LV1_R" required></div>
+          <div class="item"><label>전류 (A) - S</label><input type="number" name="lv1_a_s" placeholder="LV1_S" required></div>
+          <div class="item"><label>전류 (A) - T</label><input type="number" name="lv1_a_t" placeholder="LV1_T" required></div>
+
+        <h3>3. LV2</h3>
+          <div class="item"><label>전압 (V)</label><input type="number" name="lv2_v" placeholder="V" required></div>
+          <div class="item"><label>전류 (A) - R</label><input type="number" name="lv2_a_r" placeholder="LV1_R" required></div>
+          <div class="item"><label>전류 (A) - S</label><input type="number" name="lv2_a_s" placeholder="LV1_S" required></div>
+          <div class="item"><label>전류 (A) - T</label><input type="number" name="lv2_a_t" placeholder="LV1_T" required></div>
+     
+</div>
+
+         <div id="sec-전기_02" class="hidden section-content">
+        <h2>2. 수변전 점검일지</h2>
+        
+        <h3>4. TR1 [750KVA]</h3>
+        <div class="item"><label>온도 (℃)</label><input type="number" name="tr1_temp" placeholder="TR1_℃" required></div>
+        <div class="item">
+            <label>냄새</label>
+            <select name="tr1_smell"><option value="정상">정상</option><option value="이상">이상</option></select>
+        </div>
+        <div class="item">
+            <label>소음</label>
+            <select name="tr1_noise"><option value="정상">정상</option><option value="이상">이상</option></select>
+        </div>
+
+        <h3>5. TR2 [750KVA]</h3>
+        <div class="item"><label>온도 (℃)</label><input type="number" name="tr2_temp" placeholder="TR2_℃" required></div>
+        <div class="item">
+            <label>냄새</label>
+            <select name="tr2_smell"><option value="정상">정상</option><option value="이상">이상</option></select>
+        </div>
+        <div class="item">
+            <label>소음</label>
+            <select name="tr2_noise"><option value="정상">정상</option><option value="이상">이상</option></select>
+        </div>
+
+        <h3>6. LVR (정류기)</h3>
+        <div class="item"><label>AC_RS</label><input type="number" name="lvr_rs" placeholder="LVR_RS" required></div>
+        <div class="item"><label>AC_ST</label><input type="number" name="lvr_st" placeholder="LVR_ST" required></div>
+        <div class="item"><label>AC_TR</label><input type="number" name="lvr_tr" placeholder="LVR_TR" required></div>
+        <div class="item"><label>DC [V]</label><input type="number" name="lvr_dcv" placeholder="LVR_[V]" required></div>
+        <div class="item"><label>DC [A]</label><input type="number" name="lvr_dca" placeholder="LVR_[A]" required></div>
+        <div class="item">
+            <label>배터리</label>
+            <select name="lvr_bat"><option value="양호">양호</option><option value="이상">이상</option></select>
+        </div>
+        
+        <h3>7. 검침현황 (밤 12시)</h3>
+        <div class="item"><label>④ 현재 누적 주간 유효</label><input type="number" step="0.01" name="check_day" placeholder="소수점 두자리 까지" required></div>
+        <div class="item"><label>⑤ 현재 누적 저녁 유효</label><input type="number" step="0.01" name="check_evening" placeholder="소수점 두자리 까지" required></div>
+        <div class="item"><label>⑥ 현재 누적 심야 유효</label><input type="number" step="0.01" name="check_night" placeholder="소수점 두자리 까지" required></div>
+        
+</div>
+
+        <!-- [통신설비 섹션] -->
+        <div id="sec-통신" class="hidden section-content">
+            <h2>📶 통신/네트워크 점검항목</h2>
+            <div class="item"><label>서버랙/UPS 전원상태</label>
+                <select name="comm_pwr"><option value="정상">정상</option><option value="이상발생">이상발생</option></select>
+            </div>
+            <div class="item"><label>L2/L3 스위치 링크상태</label>
+                <select name="net_link"><option value="양호">양호</option><option value="포트장애">포트장애</option></select>
+            </div>
+            <div class="item"><label>실내/EPS실 온도(℃)</label><input type="number" name="comm_temp" placeholder="온도 입력"></div>
+        </div>
+
+        <!-- [소방설비 섹션] -->
+        <div id="sec-소방" class="hidden section-content">
+            <h2>🔥 소방/방재 점검항목</h2>
+            <div class="item"><label>수신기 화재표시등 상태</label>
+                <select name="fire_ind"><option value="정상(소등)">정상(소등)</option><option value="이상(점등)">이상(점등)</option></select>
+            </div>
+            <div class="item"><label>경보장치 연동 상태</label>
+                <select name="bell_stat"><option value="정상연동">정상연동</option><option value="연동정지">연동정지</option></select>
+            </div>
+            <div class="item"><label>배관 압력(MPa)</label><input type="number" step="0.01" name="fire_p" placeholder="수치 입력"></div>
+        </div>
+
+        <!-- [기계설비 섹션] -->
+        <div id="sec-기계" class="hidden section-content">
+            <h2>⚙️ 기계/공조/급수 점검항목</h2>
+            <div class="item"><label>펌프 가동 및 소음</label>
+                <select name="pump_stat"><option value="정상">정상</option><option value="이상소음/진동">이상소음/진동</option></select>
+            </div>
+            <div class="item"><label>누수/누유 여부</label>
+                <select name="leak_stat"><option value="없음">없음</option><option value="미세누수">미세누수</option><option value="심함">심함</option></select>
+            </div>
+        </div>
+
+        <!-- [공통: 사진 및 메모] -->
+        <div id="common-footer">
+            <h2>📸 현장 사진 증빙</h2>
+            <div id="photo-preview-container"></div>
+            <button type="button" class="btn-photo" onclick="addPhoto()">📷 사진 촬영 및 추가 (최대 4장)</button>
+            
+            <div class="item">
+                <label>특이사항 및 조치메모</label>
+                <textarea id="memo" rows="3" placeholder="이상 부위나 작업 내용을 상세히 입력하세요."></textarea>
+            </div>
+
+            <button type="button" class="btn-submit" onclick="submitToSheet()">점검 완료 (시트 전송)</button>
+        </div>
+    </div>
+</form>
+
+<script>
+    const urlParams = new URLSearchParams(window.location.search);
+    const fId = urlParams.get('id') || '미등록설비';
+    let photoCount = 0;
+    const photoData = []; 
+
+    // 1. 점검 시작
+    function startInspection() {
+    const worker = document.getElementById('worker-info').value;
+    if(!worker) { alert("점검자 정보를 입력하세요."); return; }
+
+    document.getElementById('step-auth').classList.add('hidden');
+    document.getElementById('inspection-form').classList.remove('hidden');
+
+    // 모든 섹션을 일단 숨김 (초기화)
+    const allSections = document.querySelectorAll('.section-content');
+    allSections.forEach(s => s.classList.add('hidden'));
+
+    // QR 코드의 ID값과 HTML의 섹션 ID를 매칭해서 보여줌
+    // 예: QR이 ?id=전기_01 이면 id="sec-전기_01" 인 섹션을 보여줌
+    const targetSection = document.getElementById('sec-' + fId);
+    
+    if (targetSection) {
+        targetSection.classList.remove('hidden');
+        document.getElementById('facility-title').innerText = "📋 " + fId + " 점검표";
+    } else {
+        // 매칭되는 ID가 없을 때 기본으로 보여줄 섹션 (기계 등)
+        document.getElementById('sec-기계').classList.remove('hidden');
+        document.getElementById('facility-title').innerText = "📋 일반 점검 [" + fId + "]";
+    }
+}
+
+    function showSection(id) { document.getElementById(id).classList.remove('hidden'); }
+
+    // 2. 스마트 사진 추가 (버튼 하나로 최대 4장)
+    function addPhoto() {
+        if(photoCount >= 4) { alert("사진은 4장까지만 가능합니다."); return; }
+
+        const input = document.createElement('input');
+        input.type = 'file';
+        input.accept = 'image/*';
+        input.capture = 'camera';
+
+        input.onchange = e => {
+            const file = e.target.files[0];
+            if(file) {
+                photoCount++;
+                const reader = new FileReader();
+                reader.onload = event => {
+                    const preview = document.createElement('div');
+                    preview.className = 'preview-box';
+                    preview.innerHTML = `<img src="${event.target.result}">`;
+                    document.getElementById('photo-preview-container').appendChild(preview);
+                    photoData.push(event.target.result); 
+                };
+                reader.readAsDataURL(file);
+            }
+        };
+        input.click();
+    }
+
+    // 3. 백엔드(Google 시트) 전송
+    function submitToSheet() {
+        const worker = document.getElementById('worker-info').value;
+        const memo = document.getElementById('memo').value;
+        
+        // ⚠️ 주의: 아래 URL에 본인의 구글 웹 앱 URL을 반드시 넣으세요.
+        const webAppUrl = "본인의_구글_웹앱_URL"; 
+
+        // 현재 활성화된 섹션의 모든 데이터를 수집
+        const activeSection = document.querySelector('.section-content:not(.hidden)');
+        let detailData = [];
+        if(activeSection) {
+            const inputs = activeSection.querySelectorAll('input, select');
+            inputs.forEach(el => {
+                const label = el.parentElement.querySelector('label').innerText;
+                detailData.push(`[${label}: ${el.value}]`);
+            });
+        }
+
+        if(confirm("점검 데이터를 전송하시겠습니까?")) {
+            fetch(webAppUrl, {
+                method: 'POST',
+                mode: 'no-cors',
+                body: JSON.stringify({
+                    worker: worker,
+                    fId: fId,
+                    memo: memo,
+                    photoCount: photoCount,
+                    details: detailData.join(" ")
+                })
+            })
+            .then(() => {
+                alert("✅ 전송 완료! 시트를 확인해 주세요.");
+                location.reload();
+            })
+            .catch(err => alert("❌ 전송 실패: " + err));
+        }
+    }
+</script>
+
+</body>
+</html>
