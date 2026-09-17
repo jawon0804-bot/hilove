@@ -413,8 +413,9 @@
 
             // GET 요청 (구글 앱스 스크립트 특성상 no-cors 사용)
             // 앞선 전송이 끝난 뒤에 보냄 — 실패해도 다음 전송은 이어감
+            // keepalive: 종료 화면에서 바로 창을 닫아도 브라우저가 끝까지 보낸다
             sendChain = sendChain
-                .then(() => fetch(url, { method: 'GET', mode: 'no-cors' }))
+                .then(() => fetch(url, { method: 'GET', mode: 'no-cors', keepalive: true }))
                 .catch(() => {});
             return sendChain;
         }
@@ -522,12 +523,15 @@
             saveThenFinish(document.getElementById('finalBtn'), "교육완료");
         }
 
-        // 완료 버튼 공통: 시트 저장이 끝나면(최대 8초) 종료 화면으로
+        // 완료 버튼 공통: 앞선 전송(1단계 등록)이 아직 가는 중일 때만 기다렸다가(최대 8초) 종료 화면으로.
+        // 이번 저장은 종료 화면 뒤에서 이어서 보낸다 (keepalive라 창을 닫아도 전송됨)
         function saveThenFinish(btn, statusValue) {
             btn.disabled = true;
             btn.innerText = "저장 중...";
-            const limit = new Promise(resolve => setTimeout(resolve, 8000)); // GAS가 늦어도 화면은 넘어가게
-            Promise.race([sendToGas(statusValue), limit]).then(() => showFinalMessage());
+            const previous = sendChain;
+            sendToGas(statusValue);
+            const limit = new Promise(resolve => setTimeout(resolve, 8000)); // 앞선 전송이 늦어도 화면은 넘어가게
+            Promise.race([previous, limit]).then(() => showFinalMessage());
         }
 
         function showFinalMessage() {
