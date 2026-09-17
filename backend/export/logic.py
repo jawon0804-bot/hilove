@@ -56,15 +56,14 @@ def day_start(day):
 
 
 def time_range(created, exit_at, exit_by, now):
-    """엑셀 '시간' 칸: 10:00 ~ 16:00 / 10:00 ~ 16:00(관리자) / 10:00 ~ (오늘 미퇴실) / 10:00 ~ 미확인 (지난 날 미퇴실)"""
+    """엑셀 '시간' 칸: 10:00 ~ 16:00 / 10:00 ~ (오늘 미퇴실) / 10:00 ~ 미확인 (지난 날 미퇴실).
+    관리자가 넣은 퇴실 시간도 같은 모양으로 쓴다(누가 넣었는지는 exitBy에만 남는다)."""
     start = kst(created)
     text = start.strftime("%H:%M") + " ~"
     if isinstance(exit_at, datetime):
         end = kst(exit_at)
         days = (end.date() - start.date()).days
         text += " " + ("익일 " if days == 1 else (f"+{days}일 " if days > 1 else "")) + end.strftime("%H:%M")
-        if exit_by == "admin":
-            text += "(관리자)"
     elif start.date() < kst(now).date():
         text += " 미확인"
     return text

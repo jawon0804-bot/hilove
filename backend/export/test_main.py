@@ -136,7 +136,7 @@ def test_time_range_formats():
     c = kst(2026, 9, 17, 10, 0)
     assert tr(c, None, None, NOW) == "10:00 ~"
     assert tr(c, kst(2026, 9, 17, 16, 5), "self", NOW) == "10:00 ~ 16:05"
-    assert tr(c, kst(2026, 9, 17, 16, 5), "admin", NOW) == "10:00 ~ 16:05(관리자)"
+    assert tr(c, kst(2026, 9, 17, 16, 5), "admin", NOW) == "10:00 ~ 16:05"   # 관리자 입력도 표시 없음
     assert tr(c, kst(2026, 9, 18, 1, 0), "self", NOW) == "10:00 ~ 익일 01:00"
     assert tr(kst(2026, 9, 16, 23, 0), None, None, NOW) == "23:00 ~ 미확인"
 
@@ -340,7 +340,7 @@ def test_admin_sets_exit_time_and_fields(http, store):
     token = login(http)
     status, res, _ = api(http, "/admin/update", {"id": vid(1), "fields": {
         "exit": "17:30", "note": "전화 확인", "company": " 새소속 ", "category": "점검", "status": "교육미이수"}}, token)
-    assert status == 200 and res["visit"]["time"] == "09:00 ~ 17:30(관리자)"
+    assert status == 200 and res["visit"]["time"] == "09:00 ~ 17:30"
     v = store.visits[vid(1)]
     assert v["exitAt"] == kst(2026, 9, 16, 17, 30) and v["exitBy"] == "admin"
     assert (v["company"], v["category"], v["status"], v["note"]) == ("새소속", "점검", "교육미이수", "전화 확인")
