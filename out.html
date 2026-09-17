@@ -1,0 +1,479 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>퇴실 확인 · 쿠팡 울산2 Sub-Hub</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        input, select, textarea { font-size: 16px !important; }
+        dialog::backdrop { background: rgba(15, 23, 42, 0.45); }
+        .field { width: 100%; border: 2px solid #e2e8f0; background: #f8fafc; padding: 0.85rem 1rem; border-radius: 1rem; outline-color: #0ea5e9; }
+        .field-sm { width: 100%; border: 1px solid #cbd5e1; background: #fff; padding: 0.55rem 0.75rem; border-radius: 0.75rem; outline-color: #0ea5e9; }
+        .btn { border-radius: 1rem; font-weight: 700; padding: 0.9rem 1rem; transition: transform 0.1s; }
+        .btn:active { transform: scale(0.98); }
+        .btn:disabled { opacity: 0.6; }
+        .pre { white-space: pre-wrap; word-break: break-word; }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 antialiased">
+<div class="max-w-md mx-auto min-h-screen p-4 flex flex-col gap-4">
+
+    <header class="flex items-center justify-between pt-1">
+        <div class="font-bold leading-tight">
+            <span style="color: #8B4513;">cou</span><span style="color: #E65100;">p</span><span style="color: #D4AC0D;">a</span><span style="color: #76C043;">n</span><span style="color: #00BFFF;">g</span>
+            <span class="text-slate-700 ml-1">ulsan2 sub-hub</span>
+        </div>
+        <button id="gearBtn" type="button" aria-label="관리자" class="w-10 h-10 rounded-full border border-slate-200 bg-white shadow-sm text-lg text-slate-500 active:bg-slate-100">⚙</button>
+    </header>
+
+    <!-- 퇴실 -->
+    <section id="checkoutView" class="bg-white rounded-3xl shadow-lg border border-slate-200 p-6 flex flex-col gap-4">
+        <h1 class="text-2xl font-bold text-sky-700 border-b-2 border-sky-100 pb-2">🚪 퇴실 확인</h1>
+
+        <div id="knownBox" class="hidden rounded-2xl bg-sky-50 border border-sky-100 p-4">
+            <p class="text-xs font-bold text-sky-700">오늘 이 폰으로 등록한 기록</p>
+            <p id="knownName" class="text-xl font-bold mt-1"></p>
+            <p id="knownMeta" class="text-slate-600 text-sm mt-0.5"></p>
+            <button id="notMeBtn" type="button" class="mt-2 text-sm text-slate-500 underline">본인이 아니면 이름·연락처로 찾기</button>
+        </div>
+
+        <div id="lookupBox" class="hidden flex flex-col gap-3">
+            <p class="text-sm text-slate-500">등록할 때 입력한 성함과 연락처를 입력해 주세요.</p>
+            <label class="sr-only" for="name">성함</label>
+            <input id="name" class="field" maxlength="30" placeholder="성함" autocomplete="name">
+            <label class="sr-only" for="phone">연락처</label>
+            <input id="phone" class="field" type="tel" maxlength="13" placeholder="연락처 (숫자만)" autocomplete="tel">
+        </div>
+
+        <div class="flex flex-col gap-1">
+            <label for="note" class="text-sm font-bold text-slate-700">관리자 전달사항 <span class="font-normal text-slate-400">(선택)</span></label>
+            <textarea id="note" class="field" rows="4" maxlength="500" placeholder="예: 2층 분전반 차단기 복구 완료"></textarea>
+            <p id="noteCount" class="text-right text-xs text-slate-400">0 / 500</p>
+        </div>
+
+        <p id="checkoutError" role="alert" class="hidden rounded-xl bg-red-50 text-red-700 text-sm font-medium p-3"></p>
+        <button id="checkoutBtn" type="button" class="btn bg-sky-600 text-white text-lg shadow-lg py-5">퇴실</button>
+    </section>
+
+    <!-- 퇴실 완료 -->
+    <section id="doneView" class="hidden bg-white rounded-3xl shadow-lg border border-slate-200 p-8 text-center flex flex-col gap-3">
+        <div class="text-5xl">✅</div>
+        <p id="doneTitle" class="text-2xl font-bold text-sky-700">퇴실이 기록되었습니다</p>
+        <p id="doneTime" class="text-5xl font-black text-slate-800 tracking-wider"></p>
+        <p id="doneName" class="text-slate-600"></p>
+        <p id="doneNote" class="hidden text-sm text-slate-500"></p>
+        <p class="mt-2 text-lg font-bold text-slate-700">오늘도 안전하게 귀가하세요</p>
+    </section>
+
+    <!-- 관리자 -->
+    <section id="adminView" class="hidden flex flex-col gap-3">
+        <div class="flex items-center justify-between">
+            <h1 class="text-xl font-bold text-slate-800">방문자 기록 <span class="text-sm font-normal text-slate-400">관리자</span></h1>
+            <div class="flex gap-2">
+                <button id="pwToggleBtn" type="button" class="px-3 py-2 rounded-xl bg-white border border-slate-200 text-sm">비밀번호</button>
+                <button id="logoutBtn" type="button" class="px-3 py-2 rounded-xl bg-slate-800 text-white text-sm">나가기</button>
+            </div>
+        </div>
+
+        <div id="defaultWarn" class="hidden rounded-2xl bg-amber-50 border border-amber-200 text-amber-800 text-sm p-3">
+            초기 비밀번호(1234)를 쓰고 있습니다. <button type="button" id="defaultWarnBtn" class="underline font-bold">지금 바꾸기</button>
+        </div>
+
+        <form id="pwBox" class="hidden bg-white rounded-2xl border border-slate-200 p-4 flex flex-col gap-2">
+            <p class="font-bold">비밀번호 변경</p>
+            <input id="pwCurrent" class="field-sm" type="password" placeholder="현재 비밀번호" autocomplete="current-password">
+            <input id="pwNew" class="field-sm" type="password" placeholder="새 비밀번호 (4자 이상)" autocomplete="new-password">
+            <input id="pwNew2" class="field-sm" type="password" placeholder="새 비밀번호 확인" autocomplete="new-password">
+            <p id="pwMsg" role="alert" class="hidden text-sm"></p>
+            <button type="submit" class="btn bg-sky-600 text-white py-3">변경</button>
+        </form>
+
+        <div class="bg-white rounded-2xl border border-slate-200 p-3 flex flex-wrap items-center gap-2">
+            <label class="sr-only" for="dateInput">날짜</label>
+            <input id="dateInput" type="date" class="field-sm" style="width: auto;">
+            <label class="flex items-center gap-1 text-sm"><input id="openOnly" type="checkbox" class="w-4 h-4"> 미퇴실만</label>
+            <button id="reloadBtn" type="button" class="ml-auto px-3 py-2 rounded-xl bg-slate-100 text-sm">새로고침</button>
+        </div>
+        <p id="adminSummary" class="text-sm text-slate-500 px-1"></p>
+        <p id="adminError" role="alert" class="hidden rounded-xl bg-red-50 text-red-700 text-sm p-3"></p>
+        <ul id="visitList" class="flex flex-col gap-3"></ul>
+    </section>
+</div>
+
+<dialog id="loginDialog" class="rounded-3xl p-0 w-[min(22rem,calc(100%-2rem))]">
+    <form id="loginForm" method="dialog" class="p-6 flex flex-col gap-3">
+        <p class="text-lg font-bold">관리자</p>
+        <label class="sr-only" for="loginPw">비밀번호</label>
+        <input id="loginPw" class="field" type="password" placeholder="비밀번호" autocomplete="current-password">
+        <p id="loginError" role="alert" class="hidden text-sm text-red-600"></p>
+        <div class="flex gap-2">
+            <button id="loginCancel" type="button" class="btn flex-1 bg-slate-100">취소</button>
+            <button id="loginSubmit" type="submit" class="btn flex-1 bg-sky-600 text-white">확인</button>
+        </div>
+    </form>
+</dialog>
+
+<script>
+    // 퇴실·관리자 서버: morning-80308 Cloud Run hilove-export (backend/export)
+    const API = "https://hilove-export-n45f6cr3iq-du.a.run.app";
+    const TODAY_KEY = "hilove.todayVisit";   // index.html이 등록 때 남긴 이 기기의 오늘 기록
+    const TOKEN_KEY = "hilove.adminToken";
+    const CHECKOUT_WINDOW_MS = 18 * 60 * 60 * 1000;
+    const CATEGORIES = ["방문", "점검", "A/S", "작업", "공사"];
+    const STATUSES = ["교육미이수", "교육완료", "방문확인"];
+
+    const $ = id => document.getElementById(id);
+
+    // 요소 만들기 — 방문자가 입력한 글자는 전부 textContent로만 넣는다
+    function h(tag, attrs, ...children) {
+        const el = document.createElement(tag);
+        for (const [k, v] of Object.entries(attrs || {})) {
+            if (v === null || v === undefined || v === false) continue;
+            if (k === "class") el.className = v;
+            else if (k.startsWith("on")) el.addEventListener(k.slice(2), v);
+            else el.setAttribute(k, v === true ? "" : v);
+        }
+        for (const c of children.flat()) {
+            if (c === null || c === undefined || c === false) continue;
+            el.append(c instanceof Node ? c : document.createTextNode(String(c)));
+        }
+        return el;
+    }
+
+    function show(el, on) { el.classList.toggle("hidden", !on); }
+    function setError(el, msg) { el.textContent = msg || ""; show(el, !!msg); }
+
+    async function call(path, body, token) {
+        const headers = { "Content-Type": "application/json" };
+        if (token) headers.Authorization = "Bearer " + token;
+        let res;
+        try {
+            res = await fetch(API + path, { method: "POST", headers, body: JSON.stringify(body), keepalive: path === "/checkout" });
+        } catch (e) {
+            const err = new Error("인터넷 연결을 확인하고 다시 시도해 주세요");
+            err.status = 0;
+            throw err;
+        }
+        let data = null;
+        try { data = await res.json(); } catch (e) {}
+        if (!res.ok || !data || !data.ok) {
+            const err = new Error((data && data.error) || `처리하지 못했습니다 (오류 ${res.status})`);
+            err.status = res.status;
+            throw err;
+        }
+        return data;
+    }
+
+    function formatPhone(input) {
+        input.addEventListener("input", e => {
+            let v = e.target.value.replace(/[^0-9]/g, "");
+            if (v.length > 3 && v.length <= 7) v = v.slice(0, 3) + "-" + v.slice(3);
+            else if (v.length > 7) v = v.slice(0, 3) + "-" + v.slice(3, 7) + "-" + v.slice(7);
+            e.target.value = v;
+        });
+    }
+
+    function localDay(d = new Date()) {
+        return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+    }
+
+    // 서버를 미리 깨워 둔다 (처음 요청이 몇 초 걸리는 것 줄이기). 결과는 쓰지 않는다
+    fetch(API + "/ping", { mode: "no-cors" }).catch(() => {});
+
+    // ── 퇴실 ──────────────────────────────────────────
+    let today = null;
+    let useLookup = false;
+
+    function loadToday() {
+        try {
+            const t = JSON.parse(localStorage.getItem(TODAY_KEY) || "null");
+            if (t && t.id && Date.now() - t.ts < CHECKOUT_WINDOW_MS) return t;
+        } catch (e) {}
+        return null;
+    }
+
+    function renderCheckout() {
+        const known = today && !useLookup;
+        show($("knownBox"), known);
+        show($("lookupBox"), !known);
+        if (known) {
+            $("knownName").textContent = today.company ? `${today.name} (${today.company})` : today.name;
+            $("knownMeta").textContent = [today.category, today.at && `${today.at} 입실`].filter(Boolean).join(" · ");
+        }
+    }
+
+    $("notMeBtn").addEventListener("click", () => { useLookup = true; renderCheckout(); $("name").focus(); });
+    $("note").addEventListener("input", () => { $("noteCount").textContent = `${$("note").value.length} / 500`; });
+    formatPhone($("phone"));
+
+    $("checkoutBtn").addEventListener("click", async () => {
+        const btn = $("checkoutBtn");
+        const note = $("note").value.trim();
+        let body;
+        if (today && !useLookup) {
+            body = { id: today.id, note };
+        } else {
+            const name = $("name").value.trim();
+            const phone = $("phone").value.trim();
+            if (!name || phone.replace(/[^0-9]/g, "").length < 9) {
+                setError($("checkoutError"), "성함과 연락처를 정확히 입력해 주세요.");
+                return;
+            }
+            body = { name, phone, note };
+        }
+        setError($("checkoutError"), "");
+        btn.disabled = true;
+        btn.textContent = "처리 중…";
+        try {
+            const r = await call("/checkout", body);
+            $("doneTitle").textContent = r.already ? "이미 퇴실한 기록입니다" : "퇴실이 기록되었습니다";
+            $("doneTime").textContent = r.outAt;
+            $("doneName").textContent = [r.company ? `${r.name} (${r.company})` : r.name, r.category, r.inAt && `${r.inAt} 입실`].filter(Boolean).join(" · ");
+            $("doneNote").textContent = note ? (r.already ? "전달사항을 추가로 남겼습니다." : "전달사항을 남겼습니다.") : "";
+            show($("doneNote"), !!note);
+            show($("checkoutView"), false);
+            show($("doneView"), true);
+        } catch (err) {
+            if (err.status === 404 && body.id) {
+                useLookup = true;   // 이 폰의 기록을 서버에서 못 찾음 → 이름·연락처로
+                renderCheckout();
+            }
+            setError($("checkoutError"), err.message);
+        } finally {
+            btn.disabled = false;
+            btn.textContent = "퇴실";
+        }
+    });
+
+    today = loadToday();
+    renderCheckout();
+
+    // ── 관리자 ────────────────────────────────────────
+    let token = null;
+    let visits = [];
+    let editingId = null;
+    try { token = sessionStorage.getItem(TOKEN_KEY); } catch (e) {}
+
+    function saveToken(t) {
+        token = t;
+        try { t ? sessionStorage.setItem(TOKEN_KEY, t) : sessionStorage.removeItem(TOKEN_KEY); } catch (e) {}
+    }
+
+    function openLogin() {
+        $("loginError").className = "text-sm text-red-600";
+        setError($("loginError"), "");
+        $("loginPw").value = "";
+        $("loginDialog").showModal();
+        $("loginPw").focus();
+    }
+
+    $("gearBtn").addEventListener("click", () => token ? enterAdmin() : openLogin());
+    $("loginCancel").addEventListener("click", () => $("loginDialog").close());
+    $("loginForm").addEventListener("submit", async e => {
+        e.preventDefault();
+        const pw = $("loginPw").value;
+        if (!pw) return;
+        const btn = $("loginSubmit");
+        btn.disabled = true;
+        try {
+            const r = await call("/admin/login", { password: pw });
+            saveToken(r.token);
+            $("loginDialog").close();
+            enterAdmin();
+        } catch (err) {
+            $("loginError").className = "text-sm text-red-600";
+            setError($("loginError"), err.message);
+        } finally {
+            btn.disabled = false;
+        }
+    });
+
+    function adminFailed(err) {
+        if (err.status === 401) {
+            saveToken(null);
+            leaveAdmin();
+            openLogin();
+            setError($("loginError"), err.message);
+            return;
+        }
+        setError($("adminError"), err.message);
+    }
+
+    function enterAdmin() {
+        show($("checkoutView"), false);
+        show($("doneView"), false);
+        show($("adminView"), true);
+        if (!$("dateInput").value) $("dateInput").value = localDay();
+        loadVisits();
+    }
+
+    function leaveAdmin() {
+        show($("adminView"), false);
+        show($("pwBox"), false);
+        show($("checkoutView"), true);
+    }
+
+    $("logoutBtn").addEventListener("click", () => { saveToken(null); leaveAdmin(); });
+    $("reloadBtn").addEventListener("click", loadVisits);
+    $("dateInput").addEventListener("change", loadVisits);
+    $("openOnly").addEventListener("change", renderVisits);
+
+    async function loadVisits() {
+        setError($("adminError"), "");
+        $("adminSummary").textContent = "불러오는 중…";
+        try {
+            const r = await call("/admin/visits", { date: $("dateInput").value }, token);
+            visits = r.visits;
+            editingId = null;
+            show($("defaultWarn"), r.defaultPassword);
+            renderVisits();
+        } catch (err) {
+            $("adminSummary").textContent = "";
+            adminFailed(err);
+        }
+    }
+
+    function isOpen(v) { return !v.outAt; }
+
+    function renderVisits() {
+        const list = $("visitList");
+        const shown = $("openOnly").checked ? visits.filter(isOpen) : visits;
+        const open = visits.filter(isOpen).length;
+        $("adminSummary").textContent = `총 ${visits.length}명 · 미퇴실 ${open}명` + ($("openOnly").checked ? " (미퇴실만 보는 중)" : "");
+        list.replaceChildren(...(shown.length ? shown.map(visitCard) : [h("li", { class: "text-center text-slate-400 py-8" }, "기록이 없습니다")]));
+    }
+
+    function chip(text, cls) { return h("span", { class: `text-xs font-bold px-2 py-0.5 rounded-full ${cls}` }, text); }
+
+    function visitCard(v) {
+        const pastDay = v.day < localDay();
+        const exitChip = v.outAt
+            ? (v.exitBy === "admin" ? chip("관리자 입력", "bg-slate-100 text-slate-600") : null)
+            : chip(pastDay ? "퇴실 미확인" : "미퇴실", "bg-red-100 text-red-700");
+        const statusCls = v.status === "교육미이수" ? "bg-amber-100 text-amber-800" : "bg-emerald-100 text-emerald-800";
+        return h("li", { class: "bg-white rounded-2xl border border-slate-200 shadow-sm p-4 flex flex-col gap-1", "data-id": v.id },
+            h("div", { class: "flex items-center gap-2 flex-wrap" },
+                h("span", { class: "text-lg font-bold tabular-nums" }, v.time),
+                exitChip,
+                h("span", { class: "ml-auto" }, chip(v.status, statusCls))),
+            h("p", { class: "font-bold" }, v.name, v.company ? h("span", { class: "font-normal text-slate-500" }, ` (${v.company})`) : null,
+                h("span", { class: "font-normal text-slate-500" }, ` · ${v.category}`)),
+            h("p", { class: "text-sm text-slate-600 pre" }, v.reason),
+            h("p", { class: "text-sm" }, h("a", { href: `tel:${v.phone}`, class: "text-sky-700 underline" }, v.phone),
+                v.address ? h("span", { class: "text-slate-400" }, ` · ${v.address}`) : null),
+            v.note ? h("p", { class: "text-sm bg-sky-50 rounded-xl p-2 mt-1 pre" }, "📝 ", v.note) : null,
+            editingId === v.id ? editForm(v)
+                : h("button", { type: "button", class: "self-end mt-1 px-4 py-2 rounded-xl bg-slate-100 text-sm font-bold", onclick: () => { editingId = v.id; renderVisits(); } }, "수정"));
+    }
+
+    function editForm(v) {
+        const f = {};
+        const input = (key, label, value, attrs = {}) => {
+            f[key] = h("input", { class: "field-sm", value: value ?? "", "aria-label": label, ...attrs });
+            return h("label", { class: "flex flex-col gap-0.5 text-xs text-slate-500" }, label, f[key]);
+        };
+        const select = (key, label, options, value) => {
+            f[key] = h("select", { class: "field-sm", "aria-label": label },
+                options.map(o => h("option", { value: o, selected: o === value }, o)));
+            return h("label", { class: "flex flex-col gap-0.5 text-xs text-slate-500" }, label, f[key]);
+        };
+        f.exit = h("input", { type: "time", class: "field-sm flex-1 min-w-0", value: v.outAt, "aria-label": "퇴실 시간" });
+        f.note = h("textarea", { class: "field-sm", rows: 3, maxlength: 500, "aria-label": "전달사항" });
+        f.note.value = v.note || "";
+        f.phone = h("input", { type: "tel", class: "field-sm", value: v.phone, maxlength: 13, "aria-label": "연락처" });
+        formatPhone(f.phone);
+        const err = h("p", { role: "alert", class: "hidden text-sm text-red-600" });
+
+        const nowBtn = h("button", { type: "button", class: "shrink-0 whitespace-nowrap px-3 rounded-xl bg-slate-100 text-sm", onclick: () => {
+            const d = new Date();
+            f.exit.value = `${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`;
+        } }, "지금");
+        const clearBtn = h("button", { type: "button", class: "shrink-0 whitespace-nowrap px-3 rounded-xl bg-slate-100 text-sm", onclick: () => { f.exit.value = ""; } }, "비우기");
+
+        async function save(btn) {
+            const current = { exit: v.outAt, note: v.note || "", company: v.company, name: v.name, phone: v.phone,
+                              address: v.address, category: v.category, reason: v.reason, status: v.status };
+            const fields = {};
+            for (const k of Object.keys(current)) {
+                const val = k === "note" ? f.note.value.trim() : (f[k].value || "").trim();
+                if (val !== (current[k] || "")) fields[k] = val;
+            }
+            if (!Object.keys(fields).length) { editingId = null; renderVisits(); return; }
+            btn.disabled = true;
+            try {
+                const r = await call("/admin/update", { id: v.id, fields }, token);
+                visits = visits.map(x => x.id === v.id ? r.visit : x);
+                editingId = null;
+                renderVisits();
+            } catch (e) {
+                if (e.status === 401) return adminFailed(e);
+                setError(err, e.message);
+                btn.disabled = false;
+            }
+        }
+
+        async function remove(btn) {
+            if (!confirm(`${v.name}(${v.time}) 기록을 삭제할까요?\n삭제하면 되돌릴 수 없습니다.`)) return;
+            btn.disabled = true;
+            try {
+                await call("/admin/delete", { id: v.id }, token);
+                visits = visits.filter(x => x.id !== v.id);
+                editingId = null;
+                renderVisits();
+            } catch (e) {
+                if (e.status === 401) return adminFailed(e);
+                setError(err, e.message);
+                btn.disabled = false;
+            }
+        }
+
+        const saveBtn = h("button", { type: "button", class: "btn flex-1 bg-sky-600 text-white py-2.5", onclick: e => save(e.currentTarget) }, "저장");
+        return h("div", { class: "mt-2 pt-3 border-t border-slate-100 flex flex-col gap-2" },
+            h("label", { class: "flex flex-col gap-0.5 text-xs text-slate-500" }, "퇴실 시간",
+                h("div", { class: "flex gap-2" }, f.exit, nowBtn, clearBtn)),
+            h("label", { class: "flex flex-col gap-0.5 text-xs text-slate-500" }, "전달사항", f.note),
+            h("div", { class: "grid grid-cols-2 gap-2" },
+                input("name", "성함", v.name, { maxlength: 30 }),
+                input("company", "소속", v.company, { maxlength: 50 }),
+                h("label", { class: "flex flex-col gap-0.5 text-xs text-slate-500" }, "연락처", f.phone),
+                input("address", "주소", v.address, { maxlength: 100 }),
+                select("category", "구분", CATEGORIES, v.category),
+                select("status", "교육확인", STATUSES, v.status)),
+            input("reason", "상세 내용", v.reason, { maxlength: 100 }),
+            err,
+            h("div", { class: "flex gap-2" },
+                saveBtn,
+                h("button", { type: "button", class: "btn flex-1 bg-slate-100 py-2.5", onclick: () => { editingId = null; renderVisits(); } }, "취소"),
+                h("button", { type: "button", class: "btn bg-red-50 text-red-700 py-2.5 px-4", onclick: e => remove(e.currentTarget) }, "삭제")));
+    }
+
+    // 비밀번호 변경
+    function togglePw(on) {
+        show($("pwBox"), on);
+        setError($("pwMsg"), "");
+        if (on) $("pwCurrent").focus();
+    }
+    $("pwToggleBtn").addEventListener("click", () => togglePw($("pwBox").classList.contains("hidden")));
+    $("defaultWarnBtn").addEventListener("click", () => togglePw(true));
+    $("pwBox").addEventListener("submit", async e => {
+        e.preventDefault();
+        const msg = $("pwMsg");
+        msg.className = "text-sm text-red-600";
+        if ($("pwNew").value !== $("pwNew2").value) return setError(msg, "새 비밀번호가 서로 다릅니다.");
+        try {
+            await call("/admin/password", { current: $("pwCurrent").value, new: $("pwNew").value }, token);
+            ["pwCurrent", "pwNew", "pwNew2"].forEach(id => { $(id).value = ""; });
+            saveToken(null);
+            leaveAdmin();
+            openLogin();
+            $("loginError").className = "text-sm text-emerald-700";
+            setError($("loginError"), "비밀번호를 바꿨습니다. 새 비밀번호로 다시 로그인해 주세요.");
+        } catch (err) {
+            if (err.status === 401) return adminFailed(err);
+            setError(msg, err.message);
+        }
+    });
+</script>
+</body>
+</html>

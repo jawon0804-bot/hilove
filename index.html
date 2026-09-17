@@ -84,6 +84,7 @@
                     <select id="category" required class="w-full border-2 p-4 rounded-2xl outline-sky-500 bg-slate-50 border-slate-200">
                         <option value="" disabled selected>방문 구분 선택</option>
                         <option value="방문">방문</option>
+                        <option value="방문">미팅</option>
                         <option value="점검">점검</option>
                         <option value="A/S">A/S</option>
                         <option value="작업">작업</option>
@@ -367,6 +368,7 @@
             collection: "guestbook"
         };
         const PENDING_KEY = "hilove.pendingVisit"; // 이 기기에서 오늘 등록하고 아직 완료 안 한 기록
+        const TODAY_KEY = "hilove.todayVisit";     // 이 기기의 오늘 기록 — 완료 후에도 남겨 퇴실 페이지(out.html)가 쓴다
 
         // 저장을 한 줄로 세워 순서 보장 (등록이 끝난 뒤에 완료가 간다)
         let writeChain = Promise.resolve();
@@ -427,6 +429,19 @@
                 else localStorage.removeItem(PENDING_KEY);
             } catch (e) {}
         }
+        function saveToday(id) {
+            try {
+                const d = workerData;
+                const prev = JSON.parse(localStorage.getItem(TODAY_KEY) || "null");
+                const now = new Date();
+                const at = (prev && prev.id === id) ? prev.at
+                    : `${String(now.getHours()).padStart(2, "0")}:${String(now.getMinutes()).padStart(2, "0")}`;
+                localStorage.setItem(TODAY_KEY, JSON.stringify({
+                    id, at, ts: (prev && prev.id === id) ? prev.ts : now.getTime(),
+                    name: d.name, phone: d.phone, company: d.company, category: d.category
+                }));
+            } catch (e) {}
+        }
 
         // Firestore에 쓰기 한 건. 네트워크 오류·서버 오류(5xx)는 한 번 더 시도
         // keepalive: 종료 화면에서 바로 창을 닫아도 브라우저가 끝까지 보낸다
@@ -468,6 +483,7 @@
             const reuse = (saved && saved.day === today && saved.name === d.name && saved.phone === d.phone) ? saved.id : null;
             visitDocId = reuse || newDocId();
             savePending({ id: visitDocId, day: today, name: d.name, phone: d.phone });
+            saveToday(visitDocId);
 
             const create = id => commit({
                 update: { name: docName(id), fields: strings({ ...details, name: d.name, phone: d.phone, status: "교육미이수" }) },
@@ -492,6 +508,7 @@
                     if (err.status !== 404 && err.status !== 403) throw err;
                     visitDocId = newDocId();
                     savePending({ id: visitDocId, day: today, name: d.name, phone: d.phone });
+                    saveToday(visitDocId);
                     await create(visitDocId);
                 }
             });
@@ -634,8 +651,12 @@
                    <div style="font-size: 1.25rem; font-weight: 800; color: #334155; letter-spacing: 0.2em; line-height: 1.5;">ULSAN2 SUB-HUB</div>
                    <div style="margin-top: 2.5rem;">방문을<br>환영합니다</div>`
                 : '오<br>늘<br>하<br>루<br>도<br><br>안<br>전<br>하<br>게<br><br>작<br>업<br>하<br>자';
+            // 퇴실 안내는 맨 위에 (작업자 문구가 세로로 길어 아래에 두면 안 보인다)
             document.body.innerHTML = `
-                <div style="display: flex; justify-content: center; align-items: center; min-height: 100vh; background-color: #f8fafc;">
+                <div style="display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 2rem; min-height: 100vh; padding: 1.5rem 1rem; box-sizing: border-box; background-color: #f8fafc;">
+                    <div style="max-width: 24rem; width: 100%; padding: 1rem 1.25rem; border: 2px solid #fdba74; border-radius: 1rem; background: #fff7ed; color: #9a3412; font-size: 1rem; font-weight: 700; line-height: 1.5; text-align: center; word-break: keep-all;">
+                        🚪 나가실 때 출입구 <b>QR·NFC</b>에 태그해<br><b>퇴실을 꼭 기록</b>해 주세요
+                    </div>
                     <div style="font-size: 3rem; font-weight: 900; color: #0284c7; line-height: 1.4; text-align: center; word-break: break-all; letter-spacing: 0.5rem;">
                         ${message}
                     </div>
