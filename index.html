@@ -22,7 +22,35 @@
         .content-scroll { max-height: 60vh; overflow-y: auto; padding-right: 8px; }
         .content-scroll::-webkit-scrollbar { width: 4px; }
         .content-scroll::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
-        input { font-size: 16px !important; } 
+        input, select { font-size: 16px !important; }
+        select:invalid { color: #9ca3af; }
+        select option { color: #1e293b; }
+
+        /* 구분 목록창: 지원 브라우저(Chrome·Edge·안드로이드 크롬)는 둥근 목록, 아이폰 등은 기기 기본 선택창 */
+        @supports (appearance: base-select) {
+            #category, #category::picker(select) { appearance: base-select; }
+            #category:open { border-color: #0ea5e9; }
+            #category::picker-icon { color: #94a3b8; transition: rotate 0.2s; }
+            #category:open::picker-icon { rotate: 180deg; }
+            #category::picker(select) {
+                box-sizing: border-box;
+                width: anchor-size(width);
+                margin-block: 6px;
+                position-try-order: normal; /* 아래 공간이 되면 아래로 (기본값은 넓은 쪽) */
+                padding: 6px;
+                border: 2px solid #e2e8f0;
+                border-radius: 1rem;
+                background: #fff;
+                box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
+            }
+            #category option { padding: 12px 14px; border-radius: 0.75rem; }
+            #category option:hover { background: #f0f9ff; }
+            #category option:focus-visible { outline: 2px solid #0ea5e9; outline-offset: -2px; }
+            #category option:checked { background: #e0f2fe; color: #0369a1; font-weight: 700; }
+            #category option::checkmark { display: none; }
+            #category option[value=""] { display: none; }
+            @media (prefers-reduced-motion: reduce) { #category::picker-icon { transition: none; } }
+        }
     </style>
 </head>
 <body class="bg-slate-50 text-slate-800 antialiased">
@@ -48,12 +76,20 @@
                 <div class="flex justify-end pr-1 mb-4">
                      <span class="text-[12px] text-slate-500 font-bold pr-0.5">비상 연락망 바로가기 ⬆️</span>
                 </div>
-                <div class="flex-grow space-y-4">
+                <div class="flex-grow space-y-4 pb-4">
                     <input type="text" id="company" placeholder="소속 (예: 맥서브)" class="w-full border-2 p-4 rounded-2xl outline-sky-500 bg-slate-50 border-slate-200">
                     <input type="text" id="name" placeholder="성함" class="w-full border-2 p-4 rounded-2xl outline-sky-500 bg-slate-50 border-slate-200">
                     <input type="tel" id="phone" maxlength="13" placeholder="연락처 (숫자만)" class="w-full border-2 p-4 rounded-2xl outline-sky-500 bg-slate-50 border-slate-200">
                     <input type="text" id="address" placeholder="주소 (시군구)" class="w-full border-2 p-4 rounded-2xl outline-sky-500 bg-slate-50 border-slate-200">
-                    <input type="text" id="reason" placeholder="방문사유" class="w-full border-2 p-4 rounded-2xl outline-sky-500 bg-slate-50 border-slate-200">                    
+                    <select id="category" required class="w-full border-2 p-4 rounded-2xl outline-sky-500 bg-slate-50 border-slate-200">
+                        <option value="" disabled selected>방문 구분 선택</option>
+                        <option value="방문">방문</option>
+                        <option value="점검">점검</option>
+                        <option value="A/S">A/S</option>
+                        <option value="작업">작업</option>
+                        <option value="공사">공사</option>
+                    </select>
+                    <input type="text" id="reason" placeholder="상세 내용" class="hidden w-full border-2 p-4 rounded-2xl outline-sky-500 bg-slate-50 border-slate-200">
                 </div>
                     <button onclick="saveAndNext('step-1-5')" class="mt-auto w-full bg-sky-600 text-white font-bold py-5 rounded-2xl shadow-lg mt-4 text-lg active:scale-[0.98]">
                         확인 및 대시보드 활성화
@@ -76,7 +112,8 @@
                     <p class="pl-6 indent-[-15px] p-4 bg-slate-50 rounded-2xl border border-slate-100 text-sm font-medium">4. 작업자는 사업장 내 유해▪위험요인을 발견하면 즉시 관리자에게 보고.</p>
                     <p class="pl-6 indent-[-15px] p-4 bg-slate-50 rounded-2xl border border-slate-100 text-sm font-medium">5. 작업 완료 후 발생한 폐기물 즉시 수거 및 현장 원상 복구.</p>
                 </div>
-                    <button onclick="nextStep(2)" class="mt-auto w-full bg-slate-800 text-white py-4 rounded-2xl font-bold mt-6 active:scale-[0.98]">내용 확인 완료</button>
+                    <button id="continueBtn" onclick="nextStep(2)" class="mt-auto w-full bg-slate-800 text-white py-4 rounded-2xl font-bold mt-6 active:scale-[0.98]">내용 확인 완료</button>
+                    <button id="visitExitBtn" onclick="saveThenFinish(this, '방문확인')" class="hidden mt-auto w-full bg-sky-600 text-white py-4 rounded-2xl font-bold mt-6 active:scale-[0.98]">확인 완료 · 종료</button>
             </div>
         </section>
 
@@ -317,10 +354,14 @@
             name: "", 
             phone: "", 
             address: "", 
+            category: "",
             reason: "" 
         };
 
         const scriptURL = "https://script.google.com/macros/s/AKfycbxrL3i0FLT277uWUhqit15q1ScVY_srnjy0oYHR0FflKgHb9lgVqxytxnzAhYCZj8qh/exec";
+
+        // 시트 전송을 한 줄로 세워 순서 보장 (방문은 등록 직후 종료할 수 있어 두 요청이 겹칠 수 있음)
+        let sendChain = Promise.resolve();
 
         // 연락처 하이픈 자동 처리
         document.getElementById('phone').addEventListener('input', function(e) {
@@ -329,6 +370,26 @@
             else if (val.length > 7) val = val.slice(0, 3) + '-' + val.slice(3, 7) + '-' + val.slice(7);
             e.target.value = val;
         });
+
+        // 구분 선택 시 상세 내용 칸 표시 + 구분별 예시 문구
+        const reasonPlaceholders = {
+            '방문': '상세 내용 (예: 시설팀 미팅)',
+            '점검': '상세 내용 (예: 소방시설 점검)',
+            'A/S': '상세 내용 (예: 공조기 A/S)',
+            '작업': '상세 내용 (예: 전기설비 작업)',
+            '공사': '상세 내용 (예: 통신설비 추가)'
+        };
+
+        function showReasonBox() {
+            const category = document.getElementById('category').value;
+            if (!category) return;
+            const reason = document.getElementById('reason');
+            reason.placeholder = reasonPlaceholders[category] || '상세 내용';
+            reason.classList.remove('hidden');
+        }
+
+        document.getElementById('category').addEventListener('change', showReasonBox);
+        showReasonBox(); // 뒤로가기 등으로 선택값이 복원된 경우
 
         // 오늘 날짜 가져오기 (YYYY-MM-DD)
         function getToday() {
@@ -344,15 +405,18 @@
                 name: workerData.name,
                 phone: workerData.phone,
                 address: workerData.address,
+                category: workerData.category,
                 reason: workerData.reason,
                 status: statusValue
             });
+            const url = `${scriptURL}?${params.toString()}`; // 부른 시점의 값으로 고정
 
             // GET 요청 (구글 앱스 스크립트 특성상 no-cors 사용)
-            fetch(`${scriptURL}?${params.toString()}`, { 
-                method: 'GET', 
-                mode: 'no-cors' 
-            });
+            // 앞선 전송이 끝난 뒤에 보냄 — 실패해도 다음 전송은 이어감
+            sendChain = sendChain
+                .then(() => fetch(url, { method: 'GET', mode: 'no-cors' }))
+                .catch(() => {});
+            return sendChain;
         }
 
         // 1단계: 정보 저장 및 시작 알림
@@ -362,12 +426,26 @@
             workerData.name = document.getElementById('name').value;
             workerData.phone = document.getElementById('phone').value;
             workerData.address = document.getElementById('address').value;
+            workerData.category = document.getElementById('category').value;
             workerData.reason = document.getElementById('reason').value;
 
             if (!workerData.name || !workerData.phone) { 
                 alert("성함과 연락처는 필수입니다."); 
                 return; 
             }
+            if (!workerData.category) {
+                alert("방문 구분을 선택해 주세요.");
+                return;
+            }
+            if (!workerData.reason.trim()) {
+                alert("상세 내용을 입력해 주세요.");
+                return;
+            }
+
+            // 방문은 step-1-5에서 바로 종료, 그 외는 교육 계속
+            const isVisit = (workerData.category === '방문');
+            document.getElementById('continueBtn').classList.toggle('hidden', isVisit);
+            document.getElementById('visitExitBtn').classList.toggle('hidden', !isVisit);
 
             // 시트에 행 생성 (또는 중복 날짜 체크를 위해 '교육미이수' 상태로 전송)
             sendToGas("교육미이수");
@@ -440,23 +518,29 @@
 
         // 최종 단계: 시트 업데이트 (교육완료)
         function submitToSheet() {
-            const btn = document.getElementById('finalBtn');
-            btn.disabled = true; 
-            btn.innerText = "저장 중...";
-
             // 동일한 날짜/이름/번호 행을 찾아 '교육완료'로 업데이트
-            sendToGas("교육완료");
+            saveThenFinish(document.getElementById('finalBtn'), "교육완료");
+        }
 
-            setTimeout(() => {
-                showFinalMessage();
-            }, 1000);
+        // 완료 버튼 공통: 시트 저장이 끝나면(최대 8초) 종료 화면으로
+        function saveThenFinish(btn, statusValue) {
+            btn.disabled = true;
+            btn.innerText = "저장 중...";
+            const limit = new Promise(resolve => setTimeout(resolve, 8000)); // GAS가 늦어도 화면은 넘어가게
+            Promise.race([sendToGas(statusValue), limit]).then(() => showFinalMessage());
         }
 
         function showFinalMessage() {
+            // 방문은 환영 문구(COUPANG 글자색은 step-1-5 로고와 같음), 그 외는 기존 문구
+            const message = (workerData.category === '방문')
+                ? `<div style="font-size: 2.75rem; letter-spacing: 0.08em; line-height: 1.1;"><span style="color: #8B4513;">COU</span><span style="color: #E65100;">P</span><span style="color: #D4AC0D;">A</span><span style="color: #76C043;">N</span><span style="color: #00BFFF;">G</span></div>
+                   <div style="font-size: 1.25rem; font-weight: 800; color: #334155; letter-spacing: 0.2em; line-height: 1.5;">ULSAN2 SUB-HUB</div>
+                   <div style="margin-top: 2.5rem;">방문을<br>환영합니다</div>`
+                : '오<br>늘<br>하<br>루<br>도<br><br>안<br>전<br>하<br>게<br><br>작<br>업<br>하<br>자';
             document.body.innerHTML = `
                 <div style="display: flex; justify-content: center; align-items: center; min-height: 100vh; background-color: #f8fafc;">
                     <div style="font-size: 3rem; font-weight: 900; color: #0284c7; line-height: 1.4; text-align: center; word-break: break-all; letter-spacing: 0.5rem;">
-                        오<br>늘<br>하<br>루<br>도<br><br>안<br>전<br>하<br>게<br><br>작<br>업<br>하<br>자
+                        ${message}
                     </div>
                 </div>
             `;
