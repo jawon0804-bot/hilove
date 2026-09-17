@@ -77,10 +77,10 @@
                      <span class="text-[12px] text-slate-500 font-bold pr-0.5">비상 연락망 바로가기 ⬆️</span>
                 </div>
                 <div class="flex-grow space-y-4 pb-4">
-                    <input type="text" id="company" placeholder="소속 (예: 맥서브)" class="w-full border-2 p-4 rounded-2xl outline-sky-500 bg-slate-50 border-slate-200">
-                    <input type="text" id="name" placeholder="성함" class="w-full border-2 p-4 rounded-2xl outline-sky-500 bg-slate-50 border-slate-200">
+                    <input type="text" id="company" maxlength="50" placeholder="소속 (예: 맥서브)" class="w-full border-2 p-4 rounded-2xl outline-sky-500 bg-slate-50 border-slate-200">
+                    <input type="text" id="name" maxlength="30" placeholder="성함" class="w-full border-2 p-4 rounded-2xl outline-sky-500 bg-slate-50 border-slate-200">
                     <input type="tel" id="phone" maxlength="13" placeholder="연락처 (숫자만)" class="w-full border-2 p-4 rounded-2xl outline-sky-500 bg-slate-50 border-slate-200">
-                    <input type="text" id="address" placeholder="주소 (시군구)" class="w-full border-2 p-4 rounded-2xl outline-sky-500 bg-slate-50 border-slate-200">
+                    <input type="text" id="address" maxlength="100" placeholder="주소 (시군구)" class="w-full border-2 p-4 rounded-2xl outline-sky-500 bg-slate-50 border-slate-200">
                     <select id="category" required class="w-full border-2 p-4 rounded-2xl outline-sky-500 bg-slate-50 border-slate-200">
                         <option value="" disabled selected>방문 구분 선택</option>
                         <option value="방문">방문</option>
@@ -89,7 +89,7 @@
                         <option value="작업">작업</option>
                         <option value="공사">공사</option>
                     </select>
-                    <input type="text" id="reason" placeholder="상세 내용" class="hidden w-full border-2 p-4 rounded-2xl outline-sky-500 bg-slate-50 border-slate-200">
+                    <input type="text" id="reason" maxlength="100" placeholder="상세 내용" class="hidden w-full border-2 p-4 rounded-2xl outline-sky-500 bg-slate-50 border-slate-200">
                 </div>
                     <button onclick="saveAndNext('step-1-5')" class="mt-auto w-full bg-sky-600 text-white font-bold py-5 rounded-2xl shadow-lg mt-4 text-lg active:scale-[0.98]">
                         확인 및 대시보드 활성화
@@ -348,9 +348,8 @@
     
      <script>
         // 원본 항목 데이터 저장용
-        let workerData = { 
-            date: "",
-            company: "", 
+        let workerData = {
+            company: "",  
             name: "", 
             phone: "", 
             address: "", 
@@ -358,10 +357,20 @@
             reason: "" 
         };
 
-        const scriptURL = "https://script.google.com/macros/s/AKfycbxrL3i0FLT277uWUhqit15q1ScVY_srnjy0oYHR0FflKgHb9lgVqxytxnzAhYCZj8qh/exec";
+        // 방명록 저장소: morning-80308 Firestore의 guestbook 컬렉션.
+        // 허용되는 쓰기는 backend/firestore.rules에 정해져 있다(등록 / 같은 날 상태만 완료로 / 같은 기기 재등록).
+        // 엑셀은 backend/export 내보내기 주소로 받는다.
+        const GUESTBOOK = {
+            apiKey: "AIzaSyDPn4W5oY2feGQp_7B4bmUyRWJAsy8PJMc", // morning-80308 웹 앱 "coupang" (브라우저 공개용 키)
+            base: "https://firestore.googleapis.com/v1",
+            docs: "projects/morning-80308/databases/(default)/documents",
+            collection: "guestbook"
+        };
+        const PENDING_KEY = "hilove.pendingVisit"; // 이 기기에서 오늘 등록하고 아직 완료 안 한 기록
 
-        // 시트 전송을 한 줄로 세워 순서 보장 (방문은 등록 직후 종료할 수 있어 두 요청이 겹칠 수 있음)
-        let sendChain = Promise.resolve();
+        // 저장을 한 줄로 세워 순서 보장 (등록이 끝난 뒤에 완료가 간다)
+        let writeChain = Promise.resolve();
+        let visitDocId = null;
 
         // 연락처 하이픈 자동 처리
         document.getElementById('phone').addEventListener('input', function(e) {
@@ -397,48 +406,133 @@
             return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
         }
 
-        // 스크립트 전송 공통 로직
-        function sendToGas(statusValue) {
-            const params = new URLSearchParams({
-                date: workerData.date,
-                company: workerData.company,
-                name: workerData.name,
-                phone: workerData.phone,
-                address: workerData.address,
-                category: workerData.category,
-                reason: workerData.reason,
-                status: statusValue
-            });
-            const url = `${scriptURL}?${params.toString()}`; // 부른 시점의 값으로 고정
+        function newDocId() {
+            const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+            return Array.from(crypto.getRandomValues(new Uint8Array(20)), b => chars[b % chars.length]).join("");
+        }
+        function docName(id) { return `${GUESTBOOK.docs}/${GUESTBOOK.collection}/${id}`; }
+        function strings(obj) {
+            const fields = {};
+            for (const k in obj) fields[k] = { stringValue: String(obj[k]) };
+            return fields;
+        }
+        function serverTime(...paths) { return paths.map(fieldPath => ({ fieldPath, setToServerValue: "REQUEST_TIME" })); }
 
-            // GET 요청 (구글 앱스 스크립트 특성상 no-cors 사용)
-            // 앞선 전송이 끝난 뒤에 보냄 — 실패해도 다음 전송은 이어감
-            // keepalive: 종료 화면에서 바로 창을 닫아도 브라우저가 끝까지 보낸다
-            sendChain = sendChain
-                .then(() => fetch(url, { method: 'GET', mode: 'no-cors', keepalive: true }))
-                .catch(() => {});
-            return sendChain;
+        function loadPending() {
+            try { return JSON.parse(localStorage.getItem(PENDING_KEY)); } catch (e) { return null; }
+        }
+        function savePending(value) {
+            try {
+                if (value) localStorage.setItem(PENDING_KEY, JSON.stringify(value));
+                else localStorage.removeItem(PENDING_KEY);
+            } catch (e) {}
+        }
+
+        // Firestore에 쓰기 한 건. 네트워크 오류·서버 오류(5xx)는 한 번 더 시도
+        // keepalive: 종료 화면에서 바로 창을 닫아도 브라우저가 끝까지 보낸다
+        async function commit(write, retry = 1) {
+            let res;
+            try {
+                res = await fetch(`${GUESTBOOK.base}/${GUESTBOOK.docs}:commit?key=${GUESTBOOK.apiKey}`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ writes: [write] }),
+                    keepalive: true
+                });
+            } catch (err) {
+                if (retry > 0) return commit(write, retry - 1);
+                throw err;
+            }
+            if (res.status >= 500 && retry > 0) return commit(write, retry - 1);
+            if (!res.ok) {
+                const err = new Error(`방명록 저장 실패 (HTTP ${res.status})`);
+                err.status = res.status;
+                err.retried = retry < 1;
+                err.detail = await res.text().catch(() => "");
+                throw err;
+            }
+        }
+
+        // 앞선 저장이 끝난 뒤에 실행 — 실패해도 다음 저장은 이어감
+        function queue(task) {
+            writeChain = writeChain.then(task).catch(err => console.error(err, err.detail || ""));
+            return writeChain;
+        }
+
+        // 1단계: '교육미이수'로 등록. 같은 기기에서 오늘 다시 등록하면 그 기록의 구분·내용만 고쳐 쓴다
+        function registerVisit() {
+            const d = workerData;
+            const details = { company: d.company, address: d.address, category: d.category, reason: d.reason };
+            const today = getToday();
+            const saved = loadPending();
+            const reuse = (saved && saved.day === today && saved.name === d.name && saved.phone === d.phone) ? saved.id : null;
+            visitDocId = reuse || newDocId();
+            savePending({ id: visitDocId, day: today, name: d.name, phone: d.phone });
+
+            const create = id => commit({
+                update: { name: docName(id), fields: strings({ ...details, name: d.name, phone: d.phone, status: "교육미이수" }) },
+                currentDocument: { exists: false },
+                updateTransforms: serverTime("createdAt", "updatedAt")
+            }).catch(err => {
+                // 재시도했는데 이미 있다고 거절됨(규칙상 403) = 첫 시도가 실제로는 저장된 것
+                if (!(err.retried && (err.status === 403 || err.status === 409))) throw err;
+            });
+
+            return queue(async () => {
+                if (!reuse) return create(visitDocId);
+                try {
+                    await commit({
+                        update: { name: docName(reuse), fields: strings(details) },
+                        updateMask: { fieldPaths: Object.keys(details) },
+                        currentDocument: { exists: true },
+                        updateTransforms: serverTime("updatedAt")
+                    });
+                } catch (err) {
+                    // 기억해 둔 기록이 없거나(404) 이미 끝났거나 날이 바뀌었으면(403) 새로 만든다
+                    if (err.status !== 404 && err.status !== 403) throw err;
+                    visitDocId = newDocId();
+                    savePending({ id: visitDocId, day: today, name: d.name, phone: d.phone });
+                    await create(visitDocId);
+                }
+            });
+        }
+
+        // 완료: 그 기록의 상태 칸만 교육완료/방문확인으로
+        function finishVisit(statusValue) {
+            return queue(async () => {
+                if (!visitDocId) return;
+                await commit({
+                    update: { name: docName(visitDocId), fields: strings({ status: statusValue }) },
+                    updateMask: { fieldPaths: ["status"] },
+                    currentDocument: { exists: true },
+                    updateTransforms: serverTime("updatedAt")
+                });
+                savePending(null);
+            });
         }
 
         // 1단계: 정보 저장 및 시작 알림
         function saveAndNext(nextStepId) {
-            workerData.date = getToday();
-            workerData.company = document.getElementById('company').value;
-            workerData.name = document.getElementById('name').value;
-            workerData.phone = document.getElementById('phone').value;
-            workerData.address = document.getElementById('address').value;
+            workerData.company = document.getElementById('company').value.trim();
+            workerData.name = document.getElementById('name').value.trim();
+            workerData.phone = document.getElementById('phone').value.trim();
+            workerData.address = document.getElementById('address').value.trim();
             workerData.category = document.getElementById('category').value;
-            workerData.reason = document.getElementById('reason').value;
+            workerData.reason = document.getElementById('reason').value.trim();
 
-            if (!workerData.name || !workerData.phone) { 
-                alert("성함과 연락처는 필수입니다."); 
-                return; 
+            if (!workerData.name || !workerData.phone) {
+                alert("성함과 연락처는 필수입니다.");
+                return;
+            }
+            if (workerData.phone.replace(/[^0-9]/g, '').length < 9) {
+                alert("연락처를 정확히 입력해 주세요.");
+                return;
             }
             if (!workerData.category) {
                 alert("방문 구분을 선택해 주세요.");
                 return;
             }
-            if (!workerData.reason.trim()) {
+            if (!workerData.reason) {
                 alert("상세 내용을 입력해 주세요.");
                 return;
             }
@@ -448,8 +542,8 @@
             document.getElementById('continueBtn').classList.toggle('hidden', isVisit);
             document.getElementById('visitExitBtn').classList.toggle('hidden', !isVisit);
 
-            // 시트에 행 생성 (또는 중복 날짜 체크를 위해 '교육미이수' 상태로 전송)
-            sendToGas("교육미이수");
+            // 방명록에 '교육미이수'로 등록 (화면은 기다리지 않고 넘어감)
+            registerVisit();
 
             nextStep(nextStepId);
         }
@@ -519,19 +613,18 @@
 
         // 최종 단계: 시트 업데이트 (교육완료)
         function submitToSheet() {
-            // 동일한 날짜/이름/번호 행을 찾아 '교육완료'로 업데이트
+            // 1단계에서 만든 기록의 상태를 '교육완료'로
             saveThenFinish(document.getElementById('finalBtn'), "교육완료");
         }
 
-        // 완료 버튼 공통: 앞선 전송(1단계 등록)이 아직 가는 중일 때만 기다렸다가(최대 8초) 종료 화면으로.
-        // 이번 저장은 종료 화면 뒤에서 이어서 보낸다 (keepalive라 창을 닫아도 전송됨)
+        // 완료 버튼 공통: 저장이 끝나면(보통 0.5초 안) 종료 화면으로.
+        // 3초가 넘으면 화면부터 넘기고 저장은 뒤에서 이어간다 (keepalive라 창을 닫아도 전송됨)
         function saveThenFinish(btn, statusValue) {
             btn.disabled = true;
             btn.innerText = "저장 중...";
-            const previous = sendChain;
-            sendToGas(statusValue);
-            const limit = new Promise(resolve => setTimeout(resolve, 8000)); // 앞선 전송이 늦어도 화면은 넘어가게
-            Promise.race([previous, limit]).then(() => showFinalMessage());
+            const saved = finishVisit(statusValue);
+            const limit = new Promise(resolve => setTimeout(resolve, 3000));
+            Promise.race([saved, limit]).then(() => showFinalMessage());
         }
 
         function showFinalMessage() {

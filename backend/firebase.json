@@ -1,0 +1,6 @@
+{
+  "//": "보안 규칙 배포 전용. 이 폴더에서 firebase deploy --only firestore:rules --project morning-80308",
+  "firestore": {
+    "rules": "firestore.rules"
+  }
+}

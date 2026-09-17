@@ -1,0 +1,63 @@
+rules_version = '2';
+
+// morning-80308 Firestore 보안 규칙 — 정본은 이 파일 (hilove 저장소 backend/firestore.rules)
+// ⚠️ 배포하면 프로젝트 규칙 전체가 이 내용으로 바뀐다. 다른 컬렉션을 브라우저에 열 일이 생기면 여기에 같이 적을 것.
+//    morning_brief(now-morning 서버)는 서버 권한(Admin SDK)이라 이 규칙과 무관하다.
+// 검증: node backend/test-rules.js (Rules API로 실제 규칙 엔진에 돌림, 배포 없음)
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // 기본: 전부 차단
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // 안전교육 방명록 (hilove 페이지, 로그인 없음)
+    // - 읽기 금지: 이름·연락처가 들어 있다. 엑셀은 내보내기 주소(backend/export)로 받는다.
+    // - 1단계에서 '교육미이수'로 만들고, 같은 날(한국 시간) 완료 버튼이 상태 칸만 바꾼다.
+    match /guestbook/{id} {
+      function kstDay(t) {
+        return (t + duration.value(9, 'h')).date();
+      }
+      function text(v, min, max) {
+        return v is string && v.size() >= min && v.size() <= max;
+      }
+      function validDetails(d) {
+        return text(d.company, 0, 50)
+          && text(d.address, 0, 100)
+          && d.category in ['방문', '점검', 'A/S', '작업', '공사']
+          && text(d.reason, 1, 100);
+      }
+      function validCreate(d) {
+        let fields = ['company', 'name', 'phone', 'address', 'category', 'reason', 'status', 'createdAt', 'updatedAt'];
+        return d.keys().hasOnly(fields) && d.keys().hasAll(fields)
+          && text(d.name, 1, 30)
+          && d.phone is string && d.phone.matches('^[0-9-]{9,20}$')
+          && validDetails(d)
+          && d.status == '교육미이수'
+          && d.createdAt == request.time
+          && d.updatedAt == request.time;
+      }
+      // 완료: 상태 칸만 교육완료/방문확인으로
+      function isFinish(changed, d) {
+        return changed.hasOnly(['status', 'updatedAt'])
+          && d.status in ['교육완료', '방문확인'];
+      }
+      // 같은 기기에서 다시 등록: 이름·연락처는 그대로, 상세만 고쳐 쓴다
+      function isReRegister(changed, d) {
+        return changed.hasOnly(['company', 'address', 'category', 'reason', 'updatedAt'])
+          && d.status == '교육미이수'
+          && validDetails(d);
+      }
+
+      allow create: if id.matches('^[A-Za-z0-9]{20}$')
+        && validCreate(request.resource.data);
+
+      allow update: if resource.data.status == '교육미이수'
+        && kstDay(request.time) == kstDay(resource.data.createdAt)
+        && request.resource.data.updatedAt == request.time
+        && (isFinish(request.resource.data.diff(resource.data).affectedKeys(), request.resource.data)
+            || isReRegister(request.resource.data.diff(resource.data).affectedKeys(), request.resource.data));
+    }
+  }
+}
