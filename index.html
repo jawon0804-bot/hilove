@@ -647,30 +647,6 @@
             Promise.race([saved, limit]).then(() => showFinalMessage());
         }
 
-        // 종료 화면 닫기: 3초 뒤 자동으로 닫고, 버튼으로도 닫는다.
-        // 브라우저가 스크립트 닫기를 막으면(아이폰 사파리 등) 직접 닫으라고 안내한다. 카카오톡 인앱은 전용 주소로 닫는다.
-        function closePage(btn, hint) {
-            if (/KAKAOTALK/i.test(navigator.userAgent)) location.href = "kakaotalk://inappbrowser/close";
-            window.close();
-            setTimeout(() => {   // 여기까지 왔다면 닫히지 않은 것
-                btn.textContent = "화면을 직접 닫아 주세요";
-                btn.disabled = true;
-                if (hint) hint.style.display = "block";
-            }, 500);
-        }
-        function startAutoClose(btn, hint, seconds = 3) {
-            let left = seconds;
-            const label = () => { btn.textContent = `페이지 닫기 (${left})`; };
-            label();
-            const timer = setInterval(() => {
-                left -= 1;
-                if (left > 0) return label();
-                clearInterval(timer);
-                closePage(btn, hint);
-            }, 1000);
-            btn.addEventListener("click", () => { clearInterval(timer); closePage(btn, hint); });
-        }
-
         function showFinalMessage() {
             // 방문은 환영 문구(COUPANG 글자색은 step-1-5 로고와 같음), 그 외는 기존 문구
             const message = (workerData.category === '방문')
@@ -678,9 +654,9 @@
                    <div style="font-size: 1.25rem; font-weight: 800; color: #334155; letter-spacing: 0.2em; line-height: 1.5;">ULSAN2 SUB-HUB</div>
                    <div style="margin-top: 2.5rem;">방문을<br>환영합니다</div>`
                 : '오<br>늘<br>하<br>루<br>도<br><br>안<br>전<br>하<br>게<br><br>작<br>업<br>하<br>자';
-            // 퇴실 안내는 맨 위에 (작업자 문구가 세로로 길어 아래에 두면 안 보인다), 닫기 버튼은 화면 아래에 고정
+            // 퇴실 안내는 맨 위에 (작업자 문구가 세로로 길어 아래에 두면 안 보인다), 닫기 안내는 화면 아래에 고정
             document.body.innerHTML = `
-                <div style="display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 2rem; min-height: 100vh; padding: 1.5rem 1rem 7rem; box-sizing: border-box; background-color: #f8fafc;">
+                <div style="display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 2rem; min-height: 100vh; padding: 1.5rem 1rem 5rem; box-sizing: border-box; background-color: #f8fafc;">
                     <div style="max-width: 24rem; width: 100%; padding: 1rem 1.25rem; border: 2px solid #fdba74; border-radius: 1rem; background: #fff7ed; color: #9a3412; font-size: 1rem; font-weight: 700; line-height: 1.5; text-align: center; word-break: keep-all;">
                         🚪 나가실 때 출입구 <b>QR·NFC</b>에 태그해<br><b>퇴실을 꼭 기록</b>해 주세요
                     </div>
@@ -689,14 +665,10 @@
                     </div>
                 </div>
                 <div style="position: fixed; left: 0; right: 0; bottom: 0; padding: 0.75rem 1rem calc(0.75rem + env(safe-area-inset-bottom)); background: rgba(248, 250, 252, 0.95); border-top: 1px solid #e2e8f0;">
-                    <div style="max-width: 24rem; margin: 0 auto;">
-                        <p id="closeHint" style="display: none; margin: 0 0 0.5rem; text-align: center; font-size: 0.875rem; color: #64748b;">이 브라우저는 자동으로 닫히지 않습니다. 탭(창)을 직접 닫아 주세요.</p>
-                        <button id="closeBtn" type="button" style="width: 100%; padding: 1rem; border: 0; border-radius: 1rem; background: #1e293b; color: #fff; font-size: 1.125rem; font-weight: 700;">페이지 닫기</button>
-                    </div>
+                    <p style="margin: 0; text-align: center; font-size: 0.9375rem; color: #94a3b8; word-break: keep-all;">기록되었습니다. 화면은 그대로 두고 나가셔도 됩니다.</p>
                 </div>
             `;
             window.scrollTo(0, 0);
-            startAutoClose(document.getElementById('closeBtn'), document.getElementById('closeHint'));
         }
     </script>
 </body>

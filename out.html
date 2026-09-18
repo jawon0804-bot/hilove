@@ -64,8 +64,7 @@
         <p id="doneName" class="text-slate-600"></p>
         <p id="doneNote" class="hidden text-sm text-slate-500"></p>
         <p class="mt-2 text-lg font-bold text-slate-700">오늘도 안전하게 귀가하세요</p>
-        <p id="closeHint" class="text-sm text-slate-500" style="display: none;">이 브라우저는 자동으로 닫히지 않습니다. 탭(창)을 직접 닫아 주세요.</p>
-        <button id="closeBtn" type="button" class="btn bg-slate-800 text-white text-lg py-4 mt-2">페이지 닫기</button>
+        <p class="mt-1 text-sm text-slate-400">기록되었습니다. 화면은 그대로 두고 나가셔도 됩니다.</p>
     </section>
 
     <!-- 관리자 -->
@@ -167,30 +166,6 @@
         return data;
     }
 
-    // 종료 화면 닫기: 3초 뒤 자동으로 닫고, 버튼으로도 닫는다.
-    // 브라우저가 스크립트 닫기를 막으면(아이폰 사파리 등) 직접 닫으라고 안내한다. 카카오톡 인앱은 전용 주소로 닫는다.
-    function closePage(btn, hint) {
-        if (/KAKAOTALK/i.test(navigator.userAgent)) location.href = "kakaotalk://inappbrowser/close";
-        window.close();
-        setTimeout(() => {   // 여기까지 왔다면 닫히지 않은 것
-            btn.textContent = "화면을 직접 닫아 주세요";
-            btn.disabled = true;
-            if (hint) hint.style.display = "block";
-        }, 500);
-    }
-    function startAutoClose(btn, hint, seconds = 3) {
-        let left = seconds;
-        const label = () => { btn.textContent = `페이지 닫기 (${left})`; };
-        label();
-        const timer = setInterval(() => {
-            left -= 1;
-            if (left > 0) return label();
-            clearInterval(timer);
-            closePage(btn, hint);
-        }, 1000);
-        btn.addEventListener("click", () => { clearInterval(timer); closePage(btn, hint); });
-    }
-
     function formatPhone(input) {
         input.addEventListener("input", e => {
             let v = e.target.value.replace(/[^0-9]/g, "");
@@ -260,7 +235,6 @@
             show($("doneNote"), !!note);
             show($("checkoutView"), false);
             show($("doneView"), true);
-            startAutoClose($("closeBtn"), $("closeHint"));
         } catch (err) {
             if (err.status === 404 && body.id) {
                 useLookup = true;   // 이 폰의 기록을 서버에서 못 찾음 → 이름·연락처로
