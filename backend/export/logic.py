@@ -186,8 +186,34 @@ def _sign(secret, payload):
     return hmac.new(secret, payload.encode(), hashlib.sha256).hexdigest()
 
 
-def _lock_key(ip):
-    return hashlib.sha256(("hilove:" + (ip or "")).encode()).hexdigest()[:32]
+def _lock_key(ip, scope="hilove"):
+    return hashlib.sha256((scope + ":" + (ip or "")).encode()).hexdigest()[:32]
+
+
+def csv_locked_minutes(store, ip, now):
+    """엑셀(CSV) 비밀번호 잠금 — 잠겨 있으면 남은 분, 아니면 0. 관리자 로그인과 별도로 센다."""
+    until = (store.get_lock(_lock_key(ip, "csv")) or {}).get("until")
+    if isinstance(until, datetime) and until > now:
+        return int((until - now).total_seconds() // 60) + 1
+    return 0
+
+
+def csv_record(store, ip, ok, now):
+    """엑셀 비밀번호 시도 결과 기록: 맞으면 잠금 해제, 틀리면 누적(5번/15분 → 15분 잠금)."""
+    key = _lock_key(ip, "csv")
+    lock = store.get_lock(key) or {}
+    if ok:
+        if lock:
+            store.delete_lock(key)
+        return
+    first, fails = lock.get("first"), lock.get("fails", 0)
+    if not isinstance(first, datetime) or now - first > timedelta(minutes=LOCK_MINUTES):
+        first, fails = now, 0
+    fails += 1
+    new = {"first": first, "fails": fails}
+    if fails >= LOCK_FAILS:
+        new["until"] = now + timedelta(minutes=LOCK_MINUTES)
+    store.set_lock(key, new)
 
 
 def login(store, body, now, ip, secret):

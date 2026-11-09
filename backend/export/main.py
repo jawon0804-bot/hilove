@@ -1,6 +1,7 @@
 """안전교육 방명록 서버 (morning-80308 Cloud Run 함수 hilove-export)
 
-GET  /                  엑셀 파워 쿼리용 CSV — 키 필요(헤더 X-Export-Key 또는 ?key=). ?from=&to= 로 기간 제한(한국 날짜)
+GET  /                  엑셀 파워 쿼리용 CSV — 기본(Basic) 인증 비밀번호(CSV_PASSWORD, 사용자 이름은 아무거나).
+                        예전 키(헤더 X-Export-Key 또는 ?key=)도 EXPORT_KEY가 있는 동안은 통과. ?from=&to= 로 기간 제한(한국 날짜)
 GET  /ping              서버 깨우기 (퇴실 페이지가 열릴 때 부름, 204)
 POST /checkout          퇴실 — 누구나. {id} 또는 {name, phone}, 선택 {note}. 퇴실 시각은 서버 시각
 POST /admin/login       {password} → 12시간 토큰 (5번 틀리면 15분 잠금)
@@ -9,8 +10,11 @@ POST /admin/update      {id, fields}                       │ Authorization: Be
 POST /admin/delete      {id}                               │
 POST /admin/password    {current, new}                     ┘
 
-키: Secret Manager hilove-export-key → EXPORT_KEY (관리자 토큰 서명에도 쓴다)
+비밀: hilove-csv-password → CSV_PASSWORD (엑셀 공용 비밀번호)
+      hilove-session-secret → SESSION_SECRET (관리자 토큰 서명 — CSV 비밀번호·키와 별개)
+      hilove-export-key → EXPORT_KEY (예전 ?key= 방식. 없으면 SESSION_SECRET 없을 때만 토큰 서명에 쓰인다)
 """
+import base64
 import csv
 import hashlib
 import hmac
@@ -48,8 +52,14 @@ def _export_key():
     return os.environ.get("EXPORT_KEY", "").strip()
 
 
+def _csv_password():
+    return os.environ.get("CSV_PASSWORD", "").strip()
+
+
 def _session_secret():
-    key = _export_key()
+    # 관리자 토큰 서명 비밀. 엑셀에 들어가는 CSV 키·비밀번호와 따로 둔다(SESSION_SECRET).
+    # 아직 SESSION_SECRET이 없으면 예전처럼 EXPORT_KEY에서 파생(전환 기간용 — 그동안은 키가 새면 토큰도 위조 가능).
+    key = os.environ.get("SESSION_SECRET", "").strip() or _export_key()
     if not key:
         raise ApiError(503, "서버 설정이 없습니다")
     return hmac.new(key.encode(), b"hilove-admin-session", hashlib.sha256).digest()
@@ -64,18 +74,55 @@ def to_csv(rows):
     return buf.getvalue()
 
 
-def _key_ok(request):
-    expected = _export_key()
-    given = (request.headers.get("X-Export-Key") or request.args.get("key") or "").strip()
+def _same(given, expected):
     return bool(expected) and hmac.compare_digest(given.encode(), expected.encode())
+
+
+def _basic_password(request):
+    """Authorization: Basic 의 비밀번호(사용자 이름은 무시). 헤더가 없으면 None."""
+    auth = request.headers.get("Authorization", "")
+    if not auth.lower().startswith("basic "):
+        return None
+    try:
+        decoded = base64.b64decode(auth[6:].strip(), validate=True).decode("utf-8")
+    except (ValueError, UnicodeDecodeError):
+        return ""
+    return decoded.partition(":")[2]
+
+
+def _csv_access(request, now):
+    """('ok'|'none'|'bad'|'locked', 남은 분). 'none'=자격 증명을 안 보냄(엑셀의 첫 익명 요청 포함)."""
+    key = (request.headers.get("X-Export-Key") or request.args.get("key") or "").strip()
+    password = _basic_password(request)
+    if not key and password is None:
+        return "none", 0
+    if key and _same(key, _export_key()):
+        return "ok", 0           # 예전 방식(?key=) — 전환 기간 동안만. EXPORT_KEY를 비우면 막힌다
+    if password is not None:
+        store, ip = _get_store(), _client_ip(request)
+        wait = logic.csv_locked_minutes(store, ip, now)
+        if wait:
+            return "locked", wait
+        ok = _same(password, _csv_password())
+        logic.csv_record(store, ip, ok, now)
+        if ok:
+            return "ok", 0
+    return "bad", 0
 
 
 def _export(request):
     headers = {"Cache-Control": "no-store"}
     if request.method != "GET":
         return ("GET만 받습니다", 405, headers)
-    if not _key_ok(request):
-        return ("키가 없거나 틀렸습니다", 403, headers)
+    state, wait = _csv_access(request, _now())
+    if state == "none":
+        headers["WWW-Authenticate"] = 'Basic realm="hilove", charset="UTF-8"'
+        return ("비밀번호가 필요합니다", 401, headers)
+    if state == "locked":
+        return (f"비밀번호를 여러 번 틀려 잠겼습니다. {wait}분 뒤에 다시 시도해 주세요", 429, headers)
+    if state == "bad":
+        headers["WWW-Authenticate"] = 'Basic realm="hilove", charset="UTF-8"'
+        return ("비밀번호가 틀렸습니다", 401, headers)
     day_from = request.args.get("from") or None
     day_to = request.args.get("to") or None
     for v in (day_from, day_to):

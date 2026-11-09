@@ -36,14 +36,15 @@
 
 | 경로 | 누가 | 내용 |
 |---|---|---|
-| `GET /?key=<키>` | 엑셀 | CSV. 선택 `&from=2026-09-01&to=2026-09-30`(한국 날짜, 양끝 포함). 키는 헤더 `X-Export-Key`로도 |
+| `GET /` | 엑셀 | CSV. **기본(Basic) 인증** — 공용 비밀번호(`CSV_PASSWORD`), 사용자 이름은 아무거나. 선택 `?from=2026-09-01&to=2026-09-30`(한국 날짜, 양끝 포함). 자격 증명이 없으면 401 + `WWW-Authenticate: Basic`(엑셀이 이걸 보고 입력창을 띄운다). 같은 IP에서 5번 틀리면 15분 잠금(관리자 로그인과 따로 셈) |
 | `GET /ping` | 퇴실 페이지 | 서버 깨우기(204) |
 | `POST /checkout` | 누구나 | `{id}` 또는 `{name, phone}` + 선택 `{note}`. 등록 후 18시간 안의 기록만. 퇴실 시각은 서버 시각, 이미 퇴실했으면 시각은 두고 전달사항만 덧붙임 |
 | `POST /admin/login` | 관리자 | `{password}` → 12시간 토큰. 같은 IP에서 5번 틀리면 15분 잠금 |
 | `POST /admin/visits` · `/admin/update` · `/admin/delete` · `/admin/password` | 관리자 | `Authorization: Bearer <토큰>`. 그날 목록 / 퇴실 시간·전달사항·항목 수정 / 삭제 / 비밀번호 변경(기존 로그인 모두 무효) |
 
 - 관리자 ID는 `admin` 하나. **초기 비밀번호 `1234`**(설정 문서가 없을 때) — 첫 로그인 후 ⚙ → 비밀번호에서 바꾼다. 비밀번호는 PBKDF2 해시로만 저장.
-- 토큰 서명은 `EXPORT_KEY`에서 파생한다. 키를 바꾸면 모든 관리자 로그인이 풀린다.
+- 토큰 서명은 `SESSION_SECRET`에서 파생한다(엑셀 비밀번호·키와 별개). 이 값을 바꾸면 모든 관리자 로그인이 풀린다. `SESSION_SECRET`이 없으면 전환 기간용으로 `EXPORT_KEY`에서 파생하는데, 그동안은 CSV 키를 아는 사람이 토큰을 만들 수 있다 — 반드시 `SESSION_SECRET`을 설정할 것.
+- 예전 `?key=<키>`(헤더 `X-Export-Key`) 방식은 `EXPORT_KEY`가 있는 동안만 통과한다. 엑셀을 모두 비밀번호 방식으로 옮긴 뒤 `EXPORT_KEY`를 비워 닫는다.
 - 브라우저 호출은 `ALLOWED_ORIGINS`(기본 `https://jawon0804-bot.github.io`)에만 CORS를 연다.
 
 ### CSV 열 (A~K)
@@ -53,18 +54,26 @@ NO · 날짜 · 시간 · 소속 · 이름 · 연락처 · 주소 · 구분 · �
 - 시간: `10:00 ~ 16:00`(관리자가 넣은 시간도 같은 모양, 누가 넣었는지는 `exitBy`에만) · 날을 넘기면 `익일 01:00` · 오늘 미퇴실 `10:00 ~` · 지난 날 미퇴실 `10:00 ~ 미확인`
 
 ### 실행 계정 · 배포
-실행 계정 `hilove-export@morning-80308.iam.gserviceaccount.com`: `roles/datastore.user`(Firestore 읽기·쓰기) + 비밀 `hilove-export-key` 읽기.
+실행 계정 `hilove-export@morning-80308.iam.gserviceaccount.com`: `roles/datastore.user`(Firestore 읽기·쓰기) + 아래 비밀 읽기.
+
+| 비밀 (Secret Manager) | 환경변수 | 용도 |
+|---|---|---|
+| `hilove-csv-password` | `CSV_PASSWORD` | 엑셀 공용 비밀번호 |
+| `hilove-session-secret` | `SESSION_SECRET` | 관리자 토큰 서명 (긴 랜덤 문자열) |
+| `hilove-export-key` | `EXPORT_KEY` | 예전 `?key=` 방식(정리되면 제거) |
 
 검사: `python -m pytest backend/export -q` (functions-framework, google-cloud-firestore, pytest 필요)
 
 ```
 gcloud run deploy hilove-export --source backend/export --function export_csv --base-image python312 \
   --region asia-northeast3 --service-account hilove-export@morning-80308.iam.gserviceaccount.com \
-  --set-secrets EXPORT_KEY=hilove-export-key:latest --allow-unauthenticated --max-instances 2 --project morning-80308
+  --set-secrets EXPORT_KEY=hilove-export-key:latest,CSV_PASSWORD=hilove-csv-password:latest,SESSION_SECRET=hilove-session-secret:latest \n  --allow-unauthenticated --max-instances 2 --project morning-80308
 ```
 
 ### 엑셀에서 받기
-데이터 → 웹에서 → 주소 붙여넣기 → (CSV 미리보기) 로드. 이후 **모두 새로 고침**으로 갱신.
+데이터 → 웹에서 → 주소(`https://hilove-export-n45f6cr3iq-du.a.run.app/`, **키 없이**) 붙여넣기 → 인증 창에서 **기본** 선택 → 사용자 이름은 아무거나(예: `hilove`)·비밀번호는 공용 비밀번호 → 연결 → (CSV 미리보기) 로드.
+비밀번호는 파일이 아니라 각자 PC의 엑셀 자격 증명에 저장되므로 파일을 공유해도 따라가지 않는다. 이후 **모두 새로 고침**으로 갱신(비밀번호 재입력 없음).
+비밀번호를 바꾸면 각자 데이터 → 데이터 원본 설정 → 사용 권한 지우기 후 새로 입력.
 열이 늘면 쿼리의 `Csv.Document(... Columns=N ...)` 숫자를 맞춘다(고급 편집기).
 
 ## QR·NFC

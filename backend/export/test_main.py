@@ -1,6 +1,9 @@
 """방명록 서버 검사 (Firestore 없이 가짜 저장소): python -m pytest backend/export -q"""
+import base64
 import copy
 import csv
+import hashlib
+import hmac
 import io
 import json
 from datetime import datetime, timedelta, timezone
@@ -161,15 +164,97 @@ def test_csv_key_by_header(http):
     assert http("/", headers={"X-Export-Key": "s3cret"})[1] == 200
 
 
-@pytest.mark.parametrize("path", ["/", "/?key=wrong", "/?key=s3cre", "/?key="])
+@pytest.mark.parametrize("path", ["/?key=wrong", "/?key=s3cre"])
 def test_csv_bad_key(http, path):
-    text, status, _ = http(path)
-    assert status == 403 and "010" not in text
+    text, status, hdrs = http(path)
+    assert status == 401 and "010" not in text and "Basic" in hdrs["WWW-Authenticate"]
+
+
+@pytest.mark.parametrize("path", ["/", "/?key="])
+def test_csv_no_credentials_asks_for_basic(http, path):
+    text, status, hdrs = http(path)
+    assert status == 401 and hdrs["WWW-Authenticate"].startswith("Basic") and "010" not in text
 
 
 def test_csv_no_key_configured(http, monkeypatch):
     monkeypatch.setenv("EXPORT_KEY", "")
-    assert http("/?key=")[1] == 403
+    assert http("/?key=")[1] == 401
+
+
+# ── 엑셀 공용 비밀번호(Basic 인증) ─────────────────────
+
+def basic(password, user="hilove"):
+    return {"Authorization": "Basic " + base64.b64encode(f"{user}:{password}".encode()).decode()}
+
+
+@pytest.fixture
+def csvpw(monkeypatch):
+    monkeypatch.setenv("CSV_PASSWORD", "pw-공용")
+
+
+def test_csv_basic_ok(http, csvpw):
+    text, status, hdrs = http("/", headers=basic("pw-공용"))
+    assert status == 200 and hdrs["Content-Type"].startswith("text/csv") and len(parse(text)) == 5
+
+
+def test_csv_basic_any_username(http, csvpw):
+    assert http("/", headers=basic("pw-공용", user=""))[1] == 200
+    assert http("/", headers=basic("pw-공용", user="아무나"))[1] == 200
+
+
+def test_csv_basic_password_with_colon(http, monkeypatch):
+    monkeypatch.setenv("CSV_PASSWORD", "a:b")
+    assert http("/", headers=basic("a:b"))[1] == 200
+
+
+@pytest.mark.parametrize("pw", ["wrong", "", "pw-공", "PW-공용"])
+def test_csv_basic_wrong(http, csvpw, pw):
+    text, status, hdrs = http("/", headers=basic(pw))
+    assert status == 401 and "010" not in text and hdrs["WWW-Authenticate"].startswith("Basic")
+
+
+def test_csv_basic_garbage_header(http, csvpw):
+    assert http("/", headers={"Authorization": "Basic !!!not-base64"})[1] == 401
+    assert http("/", headers={"Authorization": "Bearer xyz"})[1] == 401
+
+
+def test_csv_basic_not_configured(http, monkeypatch):
+    monkeypatch.setenv("CSV_PASSWORD", "")
+    assert http("/", headers=basic(""))[1] == 401
+
+
+def test_csv_basic_locks_after_five_failures(http, csvpw, store):
+    for _ in range(5):
+        assert http("/", headers=basic("x"))[1] == 401
+    text, status, _ = http("/", headers=basic("pw-공용"))      # 맞는 비밀번호도 잠금 중엔 막힌다
+    assert status == 429 and "010" not in text
+    assert http("/")[1] == 401                                 # 자격 증명 없는 요청은 세지도 않고 429도 아님
+
+
+def test_csv_basic_lock_expires_and_resets(http, csvpw, monkeypatch):
+    for _ in range(5):
+        http("/", headers=basic("x"))
+    monkeypatch.setattr(main, "_now", lambda: NOW + timedelta(minutes=16))
+    assert http("/", headers=basic("pw-공용"))[1] == 200
+
+
+def test_csv_basic_success_clears_failures(http, csvpw):
+    for _ in range(4):
+        http("/", headers=basic("x"))
+    assert http("/", headers=basic("pw-공용"))[1] == 200
+    for _ in range(4):
+        http("/", headers=basic("x"))
+    assert http("/", headers=basic("pw-공용"))[1] == 200       # 성공으로 초기화돼서 다시 4번까지는 안 잠긴다
+
+
+def test_csv_lock_independent_of_admin_login(http, csvpw):
+    for _ in range(5):
+        http("/", headers=basic("x"))
+    assert api(http, "/admin/login", {"password": "1234"})[0] == 200
+
+
+def test_csv_old_key_still_works_with_password_set(http, csvpw):
+    assert http("/?key=s3cret")[1] == 200
 
 
 def test_csv_bad_dates_and_method(http):
@@ -300,6 +385,26 @@ def test_token_signed_with_export_key(http, monkeypatch):
     token = login(http)
     monkeypatch.setenv("EXPORT_KEY", "other")
     assert api(http, "/admin/visits", {}, token=token)[0] == 401
+
+
+def test_token_signed_with_session_secret_not_export_key(http, monkeypatch):
+    monkeypatch.setenv("SESSION_SECRET", "sess-1")
+    token = login(http)
+    monkeypatch.setenv("EXPORT_KEY", "leaked-and-rotated")          # CSV 키가 바뀌어도 로그인은 유지
+    monkeypatch.setenv("CSV_PASSWORD", "새비밀번호")
+    assert api(http, "/admin/visits", {}, token=token)[0] == 200
+    monkeypatch.setenv("SESSION_SECRET", "sess-2")                  # 서명 비밀이 바뀌면 풀린다
+    assert api(http, "/admin/visits", {}, token=token)[0] == 401
+
+
+def test_token_cannot_be_forged_from_export_key(http, monkeypatch):
+    """CSV 키를 아는 사람이 같은 방식으로 토큰을 만들어도 SESSION_SECRET이 따로 있으면 통하지 않는다."""
+    monkeypatch.setenv("SESSION_SECRET", "sess-1")
+    exp = int((NOW + timedelta(hours=1)).timestamp())
+    payload = f"{logic.ADMIN_ID}.{exp}.0"
+    secret = hmac.new(b"s3cret", b"hilove-admin-session", hashlib.sha256).digest()
+    forged = f"{payload}.{logic._sign(secret, payload)}"
+    assert api(http, "/admin/visits", {}, token=forged)[0] == 401
 
 
 # ── 비밀번호 변경 ─────────────────────────────────────
