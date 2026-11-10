@@ -465,13 +465,18 @@ def test_admin_clears_exit(http, store):
 
 @pytest.mark.parametrize("fields", [
     {}, {"exit": "25:00"}, {"exit": "9:00"}, {"category": "기타"}, {"status": "완료"},
-    {"name": ""}, {"phone": "01011"}, {"phone": "010-abcd-1111"}, {"reason": ""},
+    {"name": ""}, {"phone": "01011"}, {"phone": "010-abcd-1111"}, {"reason": "가" * 101},
     {"note": "가" * 501}, {"createdAt": "x"}, {"exitBy": "self"},
 ])
 def test_admin_update_rejects(http, store, fields):
     before = copy.deepcopy(store.visits)
     assert api(http, "/admin/update", {"id": vid(4), "fields": fields}, login(http))[0] == 400
     assert store.visits == before
+
+
+def test_admin_clears_reason(http, store):
+    assert api(http, "/admin/update", {"id": vid(4), "fields": {"reason": ""}}, login(http))[0] == 200
+    assert store.visits[vid(4)]["reason"] == ""
 
 
 def test_admin_update_missing_doc(http):

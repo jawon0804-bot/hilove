@@ -552,10 +552,6 @@
                 alert("방문 구분을 선택해 주세요.");
                 return;
             }
-            if (!workerData.reason) {
-                alert("상세 내용을 입력해 주세요.");
-                return;
-            }
 
             // 방문은 step-1-5에서 바로 종료, 그 외는 교육 계속
             const isVisit = (workerData.category === '방문');

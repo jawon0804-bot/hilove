@@ -26,7 +26,7 @@ const cases = [
   ["등록: 작업, 소속·주소 빈칸", "ALLOW", "create", doc(`guestbook/${ID}`), NOW, newDoc({ category: "작업", company: "", address: "" }), null],
   ["등록: 처음부터 교육완료", "DENY", "create", doc(`guestbook/${ID}`), NOW, newDoc({ status: "교육완료" }), null],
   ["등록: 모르는 칸 추가", "DENY", "create", doc(`guestbook/${ID}`), NOW, newDoc({ memo: "x" }), null],
-  ["등록: 상세 내용 없음", "DENY", "create", doc(`guestbook/${ID}`), NOW, newDoc({ reason: "" }), null],
+  ["등록: 상세 내용 비움 (선택 입력)", "ALLOW", "create", doc(`guestbook/${ID}`), NOW, newDoc({ reason: "" }), null],
   ["등록: 상세 내용 칸 자체가 없음", "DENY", "create", doc(`guestbook/${ID}`), NOW, without(newDoc(), "reason"), null],
   ["등록: 상세 내용 101자", "DENY", "create", doc(`guestbook/${ID}`), NOW, newDoc({ reason: "가".repeat(101) }), null],
   ["등록: 이름 없음", "DENY", "create", doc(`guestbook/${ID}`), NOW, newDoc({ name: "" }), null],
@@ -50,7 +50,7 @@ const cases = [
   ["재등록: 구분·상세 고침", "ALLOW", "update", doc(`guestbook/${ID}`), NOW, pending({ category: "작업", reason: "전기설비 작업", updatedAt: NOW }), pending()],
   ["재등록: 내용 그대로 다시 등록", "ALLOW", "update", doc(`guestbook/${ID}`), NOW, pending({ updatedAt: NOW }), pending()],
   ["재등록: 연락처를 바꿈", "DENY", "update", doc(`guestbook/${ID}`), NOW, pending({ phone: "010-9999-9999", updatedAt: NOW }), pending()],
-  ["재등록: 상세 내용을 비움", "DENY", "update", doc(`guestbook/${ID}`), NOW, pending({ reason: "", updatedAt: NOW }), pending()],
+  ["재등록: 상세 내용을 비움", "ALLOW", "update", doc(`guestbook/${ID}`), NOW, pending({ reason: "", updatedAt: NOW }), pending()],
 
   ["조회: 한 건", "DENY", "get", doc(`guestbook/${ID}`), NOW, null, pending()],
   ["조회: 목록", "DENY", "list", doc(`guestbook/${ID}`), NOW, null, pending()],

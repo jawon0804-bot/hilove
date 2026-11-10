@@ -299,7 +299,7 @@ def update_visit(store, body, now):
 
     update = {}
     limits = {"company": (0, 50, "소속"), "name": (1, 30, "성함"), "address": (0, 100, "주소"),
-              "reason": (1, 100, "상세 내용"), "note": (0, NOTE_MAX, "전달사항")}
+              "reason": (0, 100, "상세 내용"), "note": (0, NOTE_MAX, "전달사항")}
     for key, value in f.items():
         if key in limits:
             lo, hi, label = limits[key]

@@ -26,7 +26,7 @@ service cloud.firestore {
         return text(d.company, 0, 50)
           && text(d.address, 0, 100)
           && d.category in ['방문', '점검', 'A/S', '작업', '공사']
-          && text(d.reason, 1, 100);
+          && text(d.reason, 0, 100);
       }
       function validCreate(d) {
         let fields = ['company', 'name', 'phone', 'address', 'category', 'reason', 'status', 'createdAt', 'updatedAt'];
