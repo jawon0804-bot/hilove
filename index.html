@@ -297,24 +297,7 @@
         <section id="step-9" class="step-section">
             <div class="card p-12 min-h-[620px] flex flex-col mx-auto max-w-md w-full">
                 <h2 class="text-xl font-bold text-slate-800 mb-4"><span>📞</span> 긴급 비상 연락망</h2>
-                <div class="grid grid-cols-1 gap-6">
-                    <a href="tel:119" class="p-4 rounded-2xl bg-red-50 border border-red-100 block transition active:bg-red-100">
-                        <p class="text-xs text-red-500 font-bold">공공기관</p>
-                        <p class="text-lg font-black text-red-600 leading-tight">119 / 112</p>
-                    </a>
-                    <a href="tel:052-000-0000" class="p-4 rounded-2xl bg-blue-50 border border-blue-100 block transition active:bg-blue-100">
-                        <p class="text-xs text-blue-500 font-bold">인근 병원 (응급실)</p>
-                        <p class="text-lg font-black text-blue-600 leading-tight">052-XXXX-XXXX</p>
-                    </a>
-                    <a href="tel:052-123-4567" class="p-4 rounded-2xl bg-slate-50 border border-slate-200 block transition active:bg-slate-100">
-                        <p class="text-xs text-slate-500 font-bold">쿠팡 울산2 통합관제센터</p>
-                        <p class="text-lg font-bold text-slate-700 leading-tight">052-XXXX-XXXX</p>
-                    </a>
-                    <a href="tel:010-9999-9999" class="p-4 rounded-2xl bg-slate-50 border border-slate-200 block transition active:bg-slate-100">
-                        <p class="text-xs text-slate-500 font-bold">소방안전관리자</p>
-                        <p class="text-lg font-bold text-slate-700 leading-tight">010-9999-9999</p>
-                    </a>
-                </div>
+                <div class="grid grid-cols-1 gap-6 emergency-contacts"></div>
                 <button id="finalBtn" onclick="submitToSheet()" class="mt-auto w-full bg-sky-600 text-white py-5 rounded-2xl font-black text-xl shadow-lg mt-6 active:scale-[0.98]">최종 확인 및 기록 저장</button>
             </div>
         </section>
@@ -323,24 +306,7 @@
         <section id="step-emergency" class="step-section">
             <div class="card p-12 flex flex-col mx-auto max-w-md w-full">
                 <h2 class="text-xl font-bold text-slate-800 mb-4"><span>📞</span> 긴급 비상 연락망 <span>(🚨)</span></h2>
-                <div class="grid grid-cols-1 gap-6">
-                    <a href="tel:119" class="p-4 rounded-2xl bg-red-50 border border-red-100 block transition active:bg-red-100">
-                        <p class="text-xs text-red-500 font-bold">공공기관</p>
-                        <p class="text-lg font-black text-red-600 leading-tight">119 / 112</p>
-                    </a>
-                    <a href="tel:052-000-0000" class="p-4 rounded-2xl bg-blue-50 border border-blue-100 block transition active:bg-blue-100">
-                        <p class="text-xs text-blue-500 font-bold">양산성모병원 (응급실)</p>
-                        <p class="text-lg font-black text-blue-600 leading-tight">055-912-9785</p>
-                    </a>
-                    <a href="tel:052-123-4567" class="p-4 rounded-2xl bg-slate-50 border border-slate-200 block transition active:bg-slate-100">
-                        <p class="text-xs text-slate-500 font-bold">쿠팡 울산2 통합관제센터</p>
-                        <p class="text-lg font-bold text-slate-700 leading-tight">010-9673-0804</p>
-                    </a>
-                    <a href="tel:010-9999-9999" class="p-4 rounded-2xl bg-slate-50 border border-slate-200 block transition active:bg-slate-100">
-                        <p class="text-xs text-slate-500 font-bold">소방안전관리자</p>
-                        <p class="text-lg font-bold text-slate-700 leading-tight">010-6725-2456</p>
-                    </a>
-                </div>
+                <div class="grid grid-cols-1 gap-6 emergency-contacts"></div>
                 <button onclick="location.reload()" class="w-full bg-red-600 text-white py-4 rounded-2xl font-bold mt-6">처음 화면으로 돌아가기</button>
             </div>
         </section>
@@ -348,6 +314,40 @@
     </div>
     
      <script>
+        // 비상 연락망 — 번호는 여기 한 곳만 고치면 두 화면(교육 마지막 단계, 🚨 버튼)에 모두 반영된다.
+        // number = 화면에 보이는 번호, tel = 눌렀을 때 거는 번호 (같게 둘 것)
+        const EMERGENCY_CONTACTS = [
+            { name: '공공기관', number: '119 / 112', tel: '119', theme: 'red' },
+            { name: '양산성모병원 (응급실)', number: '055-912-9785', tel: '055-912-9785', theme: 'blue' },
+            { name: '쿠팡 울산2 통합관제센터', number: '010-9673-0804', tel: '010-9673-0804', theme: 'slate' },
+            { name: '소방안전관리자', number: '010-6725-2456', tel: '010-6725-2456', theme: 'slate' }
+        ];
+        const CONTACT_STYLES = {
+            red:   { box: 'bg-red-50 border border-red-100 active:bg-red-100',       name: 'text-red-500',   number: 'font-black text-red-600' },
+            blue:  { box: 'bg-blue-50 border border-blue-100 active:bg-blue-100',    name: 'text-blue-500',  number: 'font-black text-blue-600' },
+            slate: { box: 'bg-slate-50 border border-slate-200 active:bg-slate-100', name: 'text-slate-500', number: 'font-bold text-slate-700' }
+        };
+        function renderEmergencyContacts() {
+            document.querySelectorAll('.emergency-contacts').forEach(list => {
+                list.textContent = '';
+                EMERGENCY_CONTACTS.forEach(c => {
+                    const st = CONTACT_STYLES[c.theme] || CONTACT_STYLES.slate;
+                    const a = document.createElement('a');
+                    a.href = 'tel:' + c.tel.replace(/[^0-9+]/g, '');
+                    a.className = 'p-4 rounded-2xl block transition ' + st.box;
+                    const name = document.createElement('p');
+                    name.className = 'text-xs font-bold ' + st.name;
+                    name.textContent = c.name;
+                    const num = document.createElement('p');
+                    num.className = 'text-lg leading-tight ' + st.number;
+                    num.textContent = c.number;
+                    a.append(name, num);
+                    list.appendChild(a);
+                });
+            });
+        }
+        renderEmergencyContacts();
+
         // 원본 항목 데이터 저장용
         let workerData = {
             company: "",  
