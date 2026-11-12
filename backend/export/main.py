@@ -9,6 +9,7 @@ POST /admin/visits      {date} → 그날 방문 기록            ┐
 POST /admin/update      {id, fields}                       │ Authorization: Bearer <토큰>
 POST /admin/delete      {id}                               │
 POST /admin/password    {current, new}                     ┘
+POST /tasks/purge       보유 기간(1년) 지난 방명록 파기 — Cloud Scheduler(hilove-purge)만. 그 서비스 계정의 OIDC 토큰 확인
 
 비밀: hilove-csv-password → CSV_PASSWORD (엑셀 공용 비밀번호)
       hilove-session-secret → SESSION_SECRET (관리자 토큰 서명 — CSV 비밀번호·키와 별개)
@@ -33,6 +34,10 @@ from store import FirestoreStore  # 시작할 때 라이브러리를 읽어 두�
 _DAY = re.compile(r"^\d{4}-\d{2}-\d{2}$")
 ALLOWED_ORIGINS = [o.strip() for o in os.environ.get(
     "ALLOWED_ORIGINS", "https://jawon0804-bot.github.io").split(",") if o.strip()]
+
+# /tasks/purge 를 부를 수 있는 호출자: Cloud Scheduler가 이 서비스 계정으로 서명한 OIDC 토큰(대상 = 이 서비스 주소)
+PURGE_CALLER = os.environ.get("PURGE_CALLER", "hilove-export@morning-80308.iam.gserviceaccount.com")
+PURGE_AUDIENCE = os.environ.get("PURGE_AUDIENCE", "https://hilove-export-n45f6cr3iq-du.a.run.app")
 
 _store = None
 
@@ -190,6 +195,33 @@ def _api(request, path):
         return (json.dumps({"ok": False, "error": e.message}, ensure_ascii=False), e.status, headers)
 
 
+def _verify_id_token(token):
+    """Google OIDC 토큰 검증(서명·만료·대상). 실패하면 예외."""
+    from google.auth.transport import requests as google_requests
+    from google.oauth2 import id_token
+    return id_token.verify_oauth2_token(token, google_requests.Request(), audience=PURGE_AUDIENCE)
+
+
+def _purge(request):
+    headers = {"Content-Type": "application/json; charset=utf-8", "Cache-Control": "no-store"}
+
+    def reply(status, data):
+        return (json.dumps(data, ensure_ascii=False), status, headers)
+
+    if request.method != "POST":
+        return reply(405, {"ok": False, "error": "POST만 받습니다"})
+    auth = request.headers.get("Authorization", "")
+    try:
+        claims = _verify_id_token(auth[7:]) if auth.startswith("Bearer ") else None
+    except Exception:
+        claims = None
+    if not claims or claims.get("email") != PURGE_CALLER or claims.get("email_verified") is not True:
+        return reply(403, {"ok": False, "error": "권한이 없습니다"})
+    result = logic.purge_expired(_get_store(), _now())
+    print(json.dumps({"purge": result}, ensure_ascii=False))   # Cloud Logging에 파기 기록을 남긴다
+    return reply(200, result)
+
+
 @functions_framework.http
 def export_csv(request):
     path = request.path.rstrip("/") or "/"
@@ -197,4 +229,6 @@ def export_csv(request):
         return _export(request)
     if path == "/ping":
         return ("", 204, {"Cache-Control": "no-store"})
+    if path == "/tasks/purge":
+        return _purge(request)
     return _api(request, path)

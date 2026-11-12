@@ -38,6 +38,7 @@
 |---|---|---|
 | `GET /` | 엑셀 | CSV. **기본(Basic) 인증** — 공용 비밀번호(`CSV_PASSWORD`), 사용자 이름은 아무거나. 선택 `?from=2026-09-01&to=2026-09-30`(한국 날짜, 양끝 포함). 자격 증명이 없으면 401 + `WWW-Authenticate: Basic`(엑셀이 이걸 보고 입력창을 띄운다). 같은 IP에서 5번 틀리면 15분 잠금(관리자 로그인과 따로 셈) |
 | `GET /ping` | 퇴실 페이지 | 서버 깨우기(204) |
+| `POST /tasks/purge` | Cloud Scheduler `hilove-purge` | 보유 기간(1년) 지난 방명록 파기. `hilove-export@` 계정 OIDC 토큰만 통과 |
 | `POST /checkout` | 누구나 | `{id}` 또는 `{name, phone}` + 선택 `{note}`. 등록 후 18시간 안의 기록만. 퇴실 시각은 서버 시각, 이미 퇴실했으면 시각은 두고 전달사항만 덧붙임 |
 | `POST /admin/login` | 관리자 | `{password}` → 12시간 토큰. 같은 IP에서 5번 틀리면 15분 잠금 |
 | `POST /admin/visits` · `/admin/update` · `/admin/delete` · `/admin/password` | 관리자 | `Authorization: Bearer <토큰>`. 그날 목록 / 퇴실 시간·전달사항·항목 수정 / 삭제 / 비밀번호 변경(기존 로그인 모두 무효) |
@@ -67,7 +68,20 @@ NO · 날짜 · 시간 · 소속 · 이름 · 연락처 · 주소 · 구분 · �
 ```
 gcloud run deploy hilove-export --source backend/export --function export_csv --base-image python312 \
   --region asia-northeast3 --service-account hilove-export@morning-80308.iam.gserviceaccount.com \
-  --set-secrets EXPORT_KEY=hilove-export-key:latest,CSV_PASSWORD=hilove-csv-password:latest,SESSION_SECRET=hilove-session-secret:latest \n  --allow-unauthenticated --max-instances 2 --project morning-80308
+  --set-secrets EXPORT_KEY=hilove-export-key:latest,CSV_PASSWORD=hilove-csv-password:latest,SESSION_SECRET=hilove-session-secret:latest \
+  --allow-unauthenticated --max-instances 2 --project morning-80308
+```
+
+### 보유 기간 파기 (개인정보 1년)
+등록 화면 동의서의 "수집일로부터 1년"을 지키려고 매일 새벽 Cloud Scheduler가 `/tasks/purge`를 부른다.
+한국 날짜로 등록일부터 1년이 지난 다음 날 0시부터 지운다(2025-11-13 등록 → 2026-11-14 새벽 삭제). 기간은 `logic.RETENTION_YEARS`.
+삭제 건수는 Cloud Logging에 `{"purge": {...}}`로 남는다. 엑셀로 받아 둔 사본은 지워지지 않으니 엑셀 쪽도 1년 넘은 행을 정리할 것.
+
+```
+gcloud scheduler jobs create http hilove-purge --location asia-northeast3 --schedule "30 3 * * *" --time-zone Asia/Seoul \
+  --uri https://hilove-export-n45f6cr3iq-du.a.run.app/tasks/purge --http-method POST \
+  --oidc-service-account-email hilove-export@morning-80308.iam.gserviceaccount.com \
+  --oidc-token-audience https://hilove-export-n45f6cr3iq-du.a.run.app --project morning-80308
 ```
 
 ### 엑셀에서 받기

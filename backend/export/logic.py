@@ -7,6 +7,7 @@ store가 갖춰야 할 것 (store.py의 FirestoreStore, 검사에서는 가짜):
   delete(id)
   get_config() -> dict | None / set_config(dict)
   get_lock(key) -> dict | None / set_lock(key, dict) / delete_lock(key)
+  visit_ids_before(cutoff) -> [id] / delete_many([id])   보유 기간 지난 기록 파기
 """
 import hashlib
 import hmac
@@ -20,6 +21,7 @@ CATEGORIES = ["방문", "점검", "A/S", "작업", "공사"]
 STATUSES = ["교육미이수", "교육완료", "방문확인"]
 CHECKOUT_WINDOW = timedelta(hours=18)   # 등록 후 이 시간 안에만 스스로 퇴실할 수 있다
 NOTE_MAX = 500
+RETENTION_YEARS = 1                     # 개인정보 보유 기간 — 등록 화면 동의서 "수집일로부터 1년"과 맞출 것
 
 ADMIN_ID = "admin"
 DEFAULT_PASSWORD = "1234"
@@ -337,6 +339,27 @@ def update_visit(store, body, now):
     store.update(vid, update)
     merged = {k: v for k, v in {**doc, **update}.items() if v is not None}
     return {"ok": True, "visit": _summary(vid, merged, now)}
+
+
+# ── 보유 기간 파기 ────────────────────────────────────
+
+def retention_cutoff(now):
+    """이 시각보다 먼저 등록된 기록은 보유 기간이 지났다. 한국 날짜 기준으로
+    등록일로부터 1년이 지난 다음 날 0시부터 파기 대상(2025-11-13 등록 → 2026-11-14 0시부터)."""
+    today = kst(now).date()
+    try:
+        day = today.replace(year=today.year - RETENTION_YEARS)
+    except ValueError:      # 2월 29일
+        day = today.replace(year=today.year - RETENTION_YEARS, day=28)
+    return datetime(day.year, day.month, day.day, tzinfo=KST)
+
+
+def purge_expired(store, now):
+    cutoff = retention_cutoff(now)
+    ids = store.visit_ids_before(cutoff)
+    if ids:
+        store.delete_many(ids)
+    return {"ok": True, "deleted": len(ids), "before": cutoff.strftime("%Y-%m-%d")}
 
 
 def delete_visit(store, body):

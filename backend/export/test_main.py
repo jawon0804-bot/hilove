@@ -58,6 +58,13 @@ class FakeStore:
     def delete(self, k):
         self.visits.pop(k)
 
+    def visit_ids_before(self, cutoff):
+        return [k for k, v in self.visits.items() if isinstance(v.get("createdAt"), datetime) and v["createdAt"] < cutoff]
+
+    def delete_many(self, ids):
+        for k in ids:
+            self.visits.pop(k)
+
     def get_config(self):
         return copy.deepcopy(self.config)
 
@@ -497,3 +504,59 @@ def test_admin_actions_need_login(http, store):
     assert api(http, "/admin/delete", {"id": vid(4)})[0] == 401
     assert api(http, "/admin/password", {"current": "1234", "new": "abcd"})[0] == 401
     assert store.visits == before and store.config is None
+
+
+# ── 보유 기간(1년) 파기 ───────────────────────────────
+
+def test_retention_cutoff():
+    assert logic.retention_cutoff(NOW) == datetime(2025, 9, 17, tzinfo=KST)
+    assert logic.retention_cutoff(kst(2028, 2, 29, 9, 0)) == datetime(2027, 2, 28, tzinfo=KST)   # 윤일
+
+
+def test_purge_deletes_only_expired(store):
+    store.visits[vid(10)] = person(createdAt=kst(2025, 9, 16, 23, 59), name="1년 지남")
+    store.visits[vid(11)] = person(createdAt=kst(2025, 9, 17, 0, 0), name="오늘로 딱 1년")
+    store.visits[vid(12)] = {"name": "시각 없음"}
+    res = logic.purge_expired(store, NOW)
+    assert res == {"ok": True, "deleted": 1, "before": "2025-09-17"}
+    assert vid(10) not in store.visits
+    assert vid(11) in store.visits and vid(12) in store.visits and vid(4) in store.visits
+
+
+@pytest.fixture
+def old_visit(store):
+    store.visits[vid(10)] = person(createdAt=kst(2024, 1, 1, 9, 0))
+    return store
+
+
+def _purge_call(http, monkeypatch, claims, token="t", method="POST"):
+    def fake_verify(tok):
+        if claims is None:
+            raise ValueError("bad token")
+        assert tok == token
+        return claims
+    monkeypatch.setattr(main, "_verify_id_token", fake_verify)
+    headers = {"Authorization": f"Bearer {token}"} if token else {}
+    text, status, _ = http("/tasks/purge", method, None, headers)
+    return status, json.loads(text)
+
+
+def test_purge_endpoint_scheduler(http, old_visit, monkeypatch):
+    status, res = _purge_call(http, monkeypatch, {"email": main.PURGE_CALLER, "email_verified": True})
+    assert status == 200 and res["deleted"] == 1 and vid(10) not in old_visit.visits
+
+
+@pytest.mark.parametrize("claims,token", [
+    (None, "t"),                                                          # 서명·대상 검증 실패
+    ({"email": "someone@gmail.com", "email_verified": True}, "t"),        # 다른 계정
+    ({"email": main.PURGE_CALLER, "email_verified": False}, "t"),
+    ({"email": main.PURGE_CALLER, "email_verified": True}, ""),           # 토큰 없음
+])
+def test_purge_endpoint_rejects(http, old_visit, monkeypatch, claims, token):
+    status, _ = _purge_call(http, monkeypatch, claims, token)
+    assert status == 403 and vid(10) in old_visit.visits
+
+
+def test_purge_endpoint_get(http, old_visit, monkeypatch):
+    status, _ = _purge_call(http, monkeypatch, {"email": main.PURGE_CALLER, "email_verified": True}, method="GET")
+    assert status == 405 and vid(10) in old_visit.visits

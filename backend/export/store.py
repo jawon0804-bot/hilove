@@ -33,6 +33,17 @@ class FirestoreStore:
     def delete(self, vid):
         self.db.collection(VISITS).document(vid).delete()
 
+    def visit_ids_before(self, cutoff):
+        q = self.db.collection(VISITS).where(filter=FieldFilter("createdAt", "<", cutoff)).select(["createdAt"])
+        return [s.id for s in q.stream()]
+
+    def delete_many(self, ids):
+        for i in range(0, len(ids), 400):       # 한 번에 500건까지라 나눠서
+            batch = self.db.batch()
+            for vid in ids[i:i + 400]:
+                batch.delete(self.db.collection(VISITS).document(vid))
+            batch.commit()
+
     def _config_ref(self):
         return self.db.collection("hilove_admin").document("config")
 
