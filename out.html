@@ -235,6 +235,7 @@
             show($("doneNote"), !!note);
             show($("checkoutView"), false);
             show($("doneView"), true);
+            closeAfterDone();
         } catch (err) {
             if (err.status === 404 && body.id) {
                 useLookup = true;   // 이 폰의 기록을 서버에서 못 찾음 → 이름·연락처로
@@ -246,6 +247,25 @@
             btn.textContent = "퇴실";
         }
     });
+
+    // 퇴실 완료: 3초 뒤 창 닫기를 시도한다. NFC·QR로 새로 열린 탭(기록 1개)은 브라우저가 허용한다.
+    // 막는 브라우저(아이폰 사파리 등)는 완료 화면이 남으므로, 1분 지나 다시 열리면 새 퇴실 화면으로 바꾼다
+    // (다음 날 어제 완료 화면이 보여 퇴실된 것으로 착각하지 않게).
+    let doneAt = 0;
+    const doneShown = () => !$("doneView").classList.contains("hidden") && !$("loginDialog").open;
+    function closeAfterDone() {
+        doneAt = Date.now();
+        setTimeout(() => {
+            if (!doneShown()) return;       // 그사이 ⚙ 관리자 화면으로 갔으면 닫지 않음
+            if (/KAKAOTALK/i.test(navigator.userAgent)) location.href = "kakaotalk://inappbrowser/close";
+            window.close();
+        }, 3000);
+    }
+    function resetIfStale() {
+        if (doneAt && doneShown() && Date.now() - doneAt > 60000) location.replace(location.pathname);
+    }
+    document.addEventListener("visibilitychange", () => { if (document.visibilityState === "visible") resetIfStale(); });
+    window.addEventListener("pageshow", resetIfStale);
 
     today = loadToday();
     renderCheckout();
